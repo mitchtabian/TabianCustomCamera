@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:colorpicker="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/parent_layout">
+
+
+    <!-- Flash Toggle -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:layout_marginEnd="@dimen/cam_widget_margin_top_sides"
+        android:layout_marginTop="@dimen/cam_widget_margin_top"
+        android:layout_marginRight="@dimen/cam_widget_margin_top_sides"
+        android:background="@drawable/circle_white"
+        android:id="@+id/flash_container"
+        android:layout_toLeftOf="@+id/switch_orientation_container">
+
+        <ImageButton
+            android:id="@+id/flash_toggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/cam_circle_selector"
+            android:padding="@dimen/cam_content_inset_secondary"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_flash_off"
+            tools:ignore="ContentDescription"
+            />
+
+    </RelativeLayout>
+
+
+    <!-- Switch Orientation Button -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="@dimen/cam_widget_margin_right"
+        android:layout_marginEnd="@dimen/cam_widget_margin_right"
+        android:layout_marginTop="@dimen/cam_widget_margin_top"
+        android:id="@+id/switch_orientation_container">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="1dp"
+            android:background="@drawable/circle_white"
+            >
+
+            <ImageButton
+                android:id="@+id/switch_orientation"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/cam_grey_circle_selector"
+                android:padding="@dimen/cam_content_inset_secondary"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_switch_camera_orient"
+                tools:ignore="ContentDescription"
+                />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+    <!-- Capture Stillshot Button -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="@dimen/cam_widget_margin_bottom"
+        android:padding="@dimen/cam_content_inset_primary"
+        android:background="@drawable/circle_opaque"
+        android:id="@+id/capture_button_container">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="1dp"
+            android:background="@drawable/circle_white"
+            android:layout_centerInParent="true"
+            android:id="@+id/capture_button_secondary_container">
+
+            <ImageButton
+                android:id="@+id/stillshot"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center"
+                android:background="@drawable/cam_circle_selector"
+                android:padding="@dimen/cam_content_inset_secondary"
+                android:scaleType="fitXY"
+                android:src="@drawable/cam_action_stillshot"
+                tools:ignore="ContentDescription"
+                />
+
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+
+
+</RelativeLayout>

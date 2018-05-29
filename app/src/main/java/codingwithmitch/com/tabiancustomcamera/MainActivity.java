@@ -36,12 +36,16 @@ public class MainActivity extends AppCompatActivity{
         init();
     }
 
+    private void startCamera2(){
+
+    }
+
     private void init(){
         if(mPermissions){
             if(checkCameraHardware(this)){
 
                 // Open the Camera
-                Log.d(TAG, "init: opening the camera fragment.");
+                startCamera2();
             }
             else{
                 showSnackBar("You need a camera to use this application", Snackbar.LENGTH_INDEFINITE);
