@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="cam_toolbar_elevation">4dp</dimen>
+    <dimen name="cam_content_inset_primary">8dp</dimen>
+    <dimen name="cam_content_inset_secondary">10dp</dimen>
+    <dimen name="cam_content_inset">16dp</dimen>
+    <dimen name="cam_content_inset_double">32dp</dimen>
+    <dimen name="cam_regular_content_fontsize">14sp</dimen>
+    <dimen name="cam_regular_title_fontsize">16sp</dimen>
+    <dimen name="cam_regular_header_fontsize">36sp</dimen>
+    <dimen name="cam_action_icon_size">56dp</dimen>
+    <dimen name="cam_action_icon_size_smaller">48dp</dimen>
+    <dimen name="cam_widget_margin_bottom">20dp</dimen>
+    <dimen name="cam_widget_margin_top">30dp</dimen>
+    <dimen name="cam_widget_margin_right">10dp</dimen>
+    <dimen name="cam_widget_margin_left">10dp</dimen>
+    <dimen name="cam_widget_margin_top_sides">35dp</dimen>
+
+
+    <dimen name="stillshot_widget_spacing">10dp</dimen>
+    <dimen name="stillshot_widget_margin_sides">4dp</dimen>
+    <dimen name="stillshot_widget_margin_sides_bottom">10dp</dimen>
+    <dimen name="stillshot_widget_margin_top">10dp</dimen>
+    <dimen name="stillshot_widget_margin_bottom">4dp</dimen>
+
+
+</resources>
