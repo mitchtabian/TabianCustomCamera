@@ -1,11 +1,13 @@
 package codingwithmitch.com.tabiancustomcamera;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
@@ -13,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -39,6 +42,9 @@ public class MainActivity extends AppCompatActivity{
 
                 // Open the Camera
                 Log.d(TAG, "init: opening the camera fragment.");
+            }
+            else{
+                showSnackBar("You need a camera to use this application", Snackbar.LENGTH_INDEFINITE);
             }
         }
         else{
@@ -89,6 +95,12 @@ public class MainActivity extends AppCompatActivity{
                 verifyPermissions();
             }
         }
+    }
+
+
+    private void showSnackBar(final String text, final int length) {
+        View view = this.findViewById(android.R.id.content).getRootView();
+        Snackbar.make(view, text, length).show();
     }
 }
 
