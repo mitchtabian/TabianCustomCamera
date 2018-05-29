@@ -37,7 +37,9 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void startCamera2(){
-
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.camera_container, Camera2Fragment.newInstance(), getString(R.string.fragment_camera2))
+                .commit();
     }
 
     private void init(){
