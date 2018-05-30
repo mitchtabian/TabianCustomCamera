@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Camera2Fragment extends Fragment {
 
+
     private static final String TAG = "Camera2Fragment";
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";

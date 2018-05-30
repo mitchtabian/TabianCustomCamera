@@ -31,6 +31,7 @@ public class Utility {
 
     }
 
+	
     /**
      * Given {@code choices} of {@code Size}s supported by a camera, choose the smallest one that
      * is at least as large as the respective texture view size, and that is at most as large as the
