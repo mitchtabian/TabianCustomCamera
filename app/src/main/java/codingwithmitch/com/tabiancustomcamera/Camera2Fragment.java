@@ -101,7 +101,18 @@ public class Camera2Fragment extends Fragment {
 
     /** A {@link Handler} for running tasks in the background. */
     private Handler mBackgroundHandler;
+	
+    /** Max preview width that is guaranteed by Camera2 API */
+    private int MAX_PREVIEW_WIDTH = 1920;
 
+    /** Max preview height that is guaranteed by Camera2 API */
+    private int MAX_PREVIEW_HEIGHT = 1080;
+
+    private int SCREEN_WIDTH = 0;
+
+    private int SCREEN_HEIGHT = 0;
+
+    private float ASPECT_RATIO_ERROR_RANGE = 0.1f;
 
     public static Camera2Fragment newInstance(){
         return new Camera2Fragment();
