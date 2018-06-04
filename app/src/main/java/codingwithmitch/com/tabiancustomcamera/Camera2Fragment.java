@@ -57,7 +57,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Camera2Fragment extends Fragment {
 
-
     private static final String TAG = "Camera2Fragment";
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
@@ -102,6 +101,18 @@ public class Camera2Fragment extends Fragment {
     /** A {@link Handler} for running tasks in the background. */
     private Handler mBackgroundHandler;
 
+    /** Max preview width that is guaranteed by Camera2 API */
+    private int MAX_PREVIEW_WIDTH = 1920;
+
+    /** Max preview height that is guaranteed by Camera2 API */
+    private int MAX_PREVIEW_HEIGHT = 1080;
+
+    private int SCREEN_WIDTH = 0;
+
+    private int SCREEN_HEIGHT = 0;
+
+    private float ASPECT_RATIO_ERROR_RANGE = 0.1f;
+
 
     public static Camera2Fragment newInstance(){
         return new Camera2Fragment();
@@ -122,6 +133,8 @@ public class Camera2Fragment extends Fragment {
         Log.d(TAG, "onViewCreated: created view.");
 
         mTextureView = view.findViewById(R.id.texture);
+
+        setMaxSizes();
     }
 
     /**
@@ -398,10 +411,30 @@ public class Camera2Fragment extends Fragment {
                     CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
 
-            // For still image captures, we use the largest available size.
-            Size largest = Collections.max(
-                    Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
-                    Utility.CompareSizesByArea.newInstance());
+            Size largest = null;
+            float screenAspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+            List<Size> sizes = new ArrayList<>();
+            for( Size size : Arrays.asList(map.getOutputSizes(ImageFormat.JPEG))){
+
+                float temp = (float)size.getWidth() / (float)size.getHeight();
+
+                Log.d(TAG, "setUpCameraOutputs: temp: " + temp);
+                Log.d(TAG, "setUpCameraOutputs: w: " + size.getWidth() + ", h: " + size.getHeight());
+
+                if(temp > (screenAspectRatio - screenAspectRatio * ASPECT_RATIO_ERROR_RANGE )
+                        && temp < (screenAspectRatio + screenAspectRatio * ASPECT_RATIO_ERROR_RANGE)){
+                    sizes.add(size);
+                    Log.d(TAG, "setUpCameraOutputs: found a valid size: w: " + size.getWidth() + ", h: " + size.getHeight());
+                }
+
+            }
+            if(sizes.size() > 0){
+                largest = Collections.max(
+                        sizes,
+                        new Utility.CompareSizesByArea());
+                Log.d(TAG, "setUpCameraOutputs: largest width: " + largest.getWidth());
+                Log.d(TAG, "setUpCameraOutputs: largest height: " + largest.getHeight());
+            }
 
 
             // Find out if we need to swap dimension to get the preview size relative to sensor
@@ -478,6 +511,16 @@ public class Camera2Fragment extends Fragment {
                     .show(getChildFragmentManager(), FRAGMENT_DIALOG);
         }
 
+    }
+
+    private void setMaxSizes(){
+        Point displaySize = new Point();
+        getActivity().getWindowManager().getDefaultDisplay().getSize(displaySize);
+        SCREEN_HEIGHT = displaySize.x;
+        SCREEN_WIDTH = displaySize.y;
+
+        Log.d(TAG, "setMaxSizes: screen width:" + SCREEN_WIDTH);
+        Log.d(TAG, "setMaxSizes: screen height: " + SCREEN_HEIGHT);
     }
 
 
