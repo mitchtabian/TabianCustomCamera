@@ -25,6 +25,8 @@ public class ScalingTextureView extends TextureView {
 
     private int mRatioWidth = 0;
     private int mRatioHeight = 0;
+    private int mScreenWidth = 0;
+    private int mScreenHeight = 0;
 
 
     public ScalingTextureView(Context context) {
@@ -52,13 +54,15 @@ public class ScalingTextureView extends TextureView {
      * @param width  Relative horizontal size
      * @param height Relative vertical size
      */
-    public void setAspectRatio(int width, int height) {
+    public void setAspectRatio(int width, int height, int screenWidth, int screenHeight) {
         if (width < 0 || height < 0) {
             throw new IllegalArgumentException("Size cannot be negative.");
         }
         mRatioWidth = width;
         mRatioHeight = height;
         requestLayout();
+        mScreenWidth = screenWidth;
+        mScreenHeight = screenHeight;
     }
 
     @Override
@@ -68,13 +72,9 @@ public class ScalingTextureView extends TextureView {
         int height = MeasureSpec.getSize(heightMeasureSpec);
         if (0 == mRatioWidth || 0 == mRatioHeight) {
             setMeasuredDimension(width, height);
-        } else {
-            if (width < height * mRatioWidth / mRatioHeight) {
-                setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
-            } else {
-                setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
-            }
         }
+        setMeasuredDimension(mScreenWidth, mScreenHeight);
+
     }
 
 
