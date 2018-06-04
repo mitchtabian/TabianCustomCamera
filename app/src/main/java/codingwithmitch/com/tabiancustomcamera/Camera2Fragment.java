@@ -597,7 +597,13 @@ public class Camera2Fragment extends Fragment {
         String roundedPreviewAspectRatio = String.format("%.2f", previewAspectRatio);
         if(!roundedPreviewAspectRatio.equals(roundedScreenAspectRatio) ){
 
-            
+            float scaleFactor = (screenAspectRatio / previewAspectRatio);
+            Log.d(TAG, "configureTransform: scale factor: " + scaleFactor);
+
+            float heightCorrection = (((float)SCREEN_HEIGHT * scaleFactor) - (float)SCREEN_HEIGHT) / 2;
+
+            matrix.postScale(scaleFactor, 1);
+            matrix.postTranslate(-heightCorrection, 0);
         }
 		
         mTextureView.setTransform(matrix);
