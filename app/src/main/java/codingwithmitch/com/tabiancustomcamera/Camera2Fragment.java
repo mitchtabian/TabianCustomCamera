@@ -473,6 +473,14 @@ public class Camera2Fragment extends Fragment {
                 maxPreviewWidth = displaySize.y;
                 maxPreviewHeight = displaySize.x;
             }
+			
+			if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
+                maxPreviewWidth = MAX_PREVIEW_WIDTH;
+            }
+
+            if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
+                maxPreviewHeight = MAX_PREVIEW_HEIGHT;
+            }
 
             Log.d(TAG, "setUpCameraOutputs: max preview width: " + maxPreviewWidth);
             Log.d(TAG, "setUpCameraOutputs: max preview height: " + maxPreviewHeight);
