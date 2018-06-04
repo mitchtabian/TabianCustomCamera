@@ -24,6 +24,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
@@ -415,6 +416,8 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         public void onImageAvailable(ImageReader reader) {
             Log.d(TAG, "onImageAvailable: called.");
 
+            Image image = reader.acquireNextImage();
+            Log.d(TAG, "onImageAvailable: got the image: " + image.getTimestamp());
         }
     };
     /**
@@ -505,7 +508,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
 
             // Here, we create a CameraCaptureSession for camera preview.
-            mCameraDevice.createCaptureSession(Arrays.asList(surface),
+            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
 
                         @Override
@@ -706,12 +709,15 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
             Log.d(TAG, "setUpCameraOutputs: max preview height: " + maxPreviewHeight);
 
 
-            if(largest != null){
+            mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
+                    ImageFormat.JPEG, /*maxImages*/2);
+            mImageReader.setOnImageAvailableListener(
+                    mOnImageAvailableListener, mBackgroundHandler);
 
-                mPreviewSize = Utility.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
-                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                        maxPreviewHeight, largest);
-            }
+
+            mPreviewSize = Utility.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                    rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                    maxPreviewHeight, largest);
 
 
             Log.d(TAG, "setUpCameraOutputs: preview width: " + mPreviewSize.getWidth());
