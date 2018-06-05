@@ -667,7 +667,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
     public void onPause() {
         closeCamera();
         stopBackgroundThread();
-		if(mBackgroundImageRotater != null){
+        if(mBackgroundImageRotater != null){
             mBackgroundImageRotater.cancel(true);
         }
         super.onPause();
@@ -946,6 +946,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                     mBackgroundImageRotater.execute();
                     mIsImageAvailable = true;
                     mCapturedImage.close();
+
                 }
                 else{
                     Log.d(TAG, "onImageSavedCallback: error saving image: " + e.getMessage());
@@ -962,8 +963,8 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         mBackgroundHandler.post(imageSaver);
     }
 
-    private void displayTempImage(){
-        Log.d(TAG, "displayTempImage: displaying stillshot image.");
+    private void displayCapturedImage(){
+        Log.d(TAG, "displayCapturedImage: displaying stillshot image.");
         final Activity activity = getActivity();
         if(activity != null){
             activity.runOnUiThread(new Runnable() {
@@ -1025,7 +1026,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
             if(integer == 1){
-                displayTempImage();
+                displayCapturedImage();
             }
             else{
                 showSnackBar("Error preparing image", Snackbar.LENGTH_SHORT);
