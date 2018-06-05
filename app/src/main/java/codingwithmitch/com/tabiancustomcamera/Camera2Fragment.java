@@ -167,8 +167,14 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
     private IMainActivity mIMainActivity;
 
-    //widgets
+    private Bitmap mCapturedBitmap;
 
+    private BackgroundImageRotater mBackgroundImageRotater;
+
+    //widgets
+    private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
+    mCaptureBtnContainer;
+    private ImageView mStillshotImageView;
 
 
 
@@ -192,8 +198,12 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         view.findViewById(R.id.stillshot).setOnClickListener(this);
         view.findViewById(R.id.switch_orientation).setOnClickListener(this);
 
+        mStillshotImageView = view.findViewById(R.id.stillshot_imageview);
+        mStillshotContainer = view.findViewById(R.id.stillshot_container);
+        mFlashContainer = view.findViewById(R.id.flash_container);
+        mSwitchOrientationContainer = view.findViewById(R.id.switch_orientation_container);
+        mCaptureBtnContainer = view.findViewById(R.id.capture_button_container);
         mTextureView = view.findViewById(R.id.texture);
-
 
         setMaxSizes();
 
@@ -825,7 +835,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                     mIMainActivity.setFrontCameraId(cameraId);
                 }
                 else if (facing == CameraCharacteristics.LENS_FACING_BACK){
-                   mIMainActivity.setBackCameraId(cameraId);
+                    mIMainActivity.setBackCameraId(cameraId);
                 }
             }
             mIMainActivity.setCameraFrontFacing();
@@ -929,7 +939,12 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 if(e == null){
                     Log.d(TAG, "onImageSavedCallback: image saved!");
 
+                    mBackgroundImageRotater = new BackgroundImageRotater(getActivity());
+                    mBackgroundImageRotater.execute();
                     mIsImageAvailable = true;
+                    mCapturedImage.close();
+
+                    displayTempImage();
                 }
                 else{
                     Log.d(TAG, "onImageSavedCallback: error saving image: " + e.getMessage());
@@ -944,6 +959,131 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 callback
         );
         mBackgroundHandler.post(imageSaver);
+    }
+
+    private void displayTempImage(){
+        Log.d(TAG, "displayTempImage: displaying stillshot image.");
+        final Activity activity = getActivity();
+        if(activity != null){
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    Glide.with(getActivity())
+                            .load(mCapturedImage)
+                            .into(mStillshotImageView);
+
+                    showStillshotContainer();
+                }
+            });
+        }
+    }
+
+    private void showStillshotContainer(){
+        mStillshotContainer.setVisibility(View.VISIBLE);
+        mFlashContainer.setVisibility(View.INVISIBLE);
+        mSwitchOrientationContainer.setVisibility(View.INVISIBLE);
+        mCaptureBtnContainer.setVisibility(View.INVISIBLE);
+
+        closeCamera();
+    }
+
+    /**
+     *  WARNING!
+     *  Can cause memory leaks! To prevent this the object is a global and CANCEL is being called
+     *  in "OnPause".
+     */
+    private class BackgroundImageRotater extends AsyncTask<Void, Integer, Integer>{
+
+        Activity mActivity;
+
+        public BackgroundImageRotater(Activity activity) {
+            mActivity = activity;
+        }
+
+        @Override
+        protected Integer doInBackground(Void... voids) {
+            Log.d(TAG, "doInBackground: adjusting image for display...");
+            File file = new File(mActivity.getExternalFilesDir(null), "temp_image.jpg");
+            final Uri tempImageUri = Uri.fromFile(file);
+
+            Bitmap bitmap = null;
+            try {
+                ExifInterface exif = new ExifInterface(tempImageUri.getPath());
+                bitmap = MediaStore.Images.Media.getBitmap(mActivity.getContentResolver(), tempImageUri);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+                mCapturedBitmap = rotateBitmap(bitmap, orientation);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return 0;
+            }
+            return 1;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            if(integer == 1){
+                displayTempImage();
+            }
+            else{
+                showSnackBar("Error preparing image", Snackbar.LENGTH_SHORT);
+            }
+        }
+    }
+
+    private Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                Log.d(TAG, "rotateBitmap: transpose");
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_NORMAL:
+                Log.d(TAG, "rotateBitmap: normal.");
+                return bitmap;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                Log.d(TAG, "rotateBitmap: flip horizontal");
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                Log.d(TAG, "rotateBitmap: rotate 180");
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                Log.d(TAG, "rotateBitmap: rotate vertical");
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                Log.d(TAG, "rotateBitmap: rotate 90");
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                Log.d(TAG, "rotateBitmap: transverse");
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                Log.d(TAG, "rotateBitmap: rotate 270");
+                matrix.setRotate(-90);
+                break;
+        }
+        try {
+            if (mIMainActivity.isCameraFrontFacing()) {
+                Log.d(TAG, "rotateBitmap: MIRRORING IMAGE.");
+                matrix.postScale(-1.0f, 1.0f);
+            }
+
+            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            bitmap.recycle();
+
+            return bmRotated;
+        } catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 

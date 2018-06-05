@@ -115,7 +115,17 @@
 
     </RelativeLayout>
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/stillshot_container"
+        android:visibility="visible">
 
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/stillshot_imageview"/>
 
+    </RelativeLayout>
 
 </RelativeLayout>
