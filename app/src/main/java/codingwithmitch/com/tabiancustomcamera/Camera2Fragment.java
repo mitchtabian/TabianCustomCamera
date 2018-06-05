@@ -1,6 +1,7 @@
 package codingwithmitch.com.tabiancustomcamera;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -80,7 +81,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Camera2Fragment extends Fragment implements
         View.OnClickListener,
-        View.OnTouchListener
+        View.OnTouchListener,
+        VerticalSlideColorPicker.OnColorChangeListener
 {
 
     private static final String TAG = "Camera2Fragment";
@@ -180,8 +182,9 @@ public class Camera2Fragment extends Fragment implements
 
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
-    mCaptureBtnContainer, mCloseStillshotContainer, mPenContainer;
+    mCaptureBtnContainer, mCloseStillshotContainer, mPenContainer, mUndoContainer, mColorPickerContainer;
     private DrawableImageView mStillshotImageView;
+    private VerticalSlideColorPicker mVerticalSlideColorPicker;
 
 
 
@@ -206,6 +209,9 @@ public class Camera2Fragment extends Fragment implements
         view.findViewById(R.id.switch_orientation).setOnClickListener(this);
         view.findViewById(R.id.init_draw_icon).setOnClickListener(this);
 
+        mVerticalSlideColorPicker = view.findViewById(R.id.color_picker);
+        mUndoContainer = view.findViewById(R.id.undo_container);
+        mColorPickerContainer = view.findViewById(R.id.color_picker_container);
         mPenContainer = view.findViewById(R.id.pen_container);
         mCloseStillshotContainer = view.findViewById(R.id.close_stillshot_view);
         mStillshotImageView = view.findViewById(R.id.stillshot_imageview);
@@ -216,8 +222,11 @@ public class Camera2Fragment extends Fragment implements
         mTextureView = view.findViewById(R.id.texture);
 
         mCloseStillshotContainer.setOnClickListener(this);
+        mUndoContainer.setOnClickListener(this);
 
         mStillshotImageView.setOnTouchListener(this);
+
+        mVerticalSlideColorPicker.setOnColorChangeListener(this);
 
         setMaxSizes();
         resetIconVisibilities();
@@ -248,31 +257,51 @@ public class Camera2Fragment extends Fragment implements
             }
 
             case R.id.init_draw_icon:{
-                toggleEnableDraw();
+                toggleColorPickerVisibility();
+                break;
+            }
+
+            case R.id.undo_container:{
+                undoAction();
                 break;
             }
         }
     }
 
-    private void toggleEnableDraw(){
-        if(mIsDrawingEnabled){
-            mIsDrawingEnabled = false;
+    @Override
+    public void onColorChange(int selectedColor) {
+        mStillshotImageView.setBrushColor(selectedColor);
+    }
 
-            showSnackBar("Disabled pen", Snackbar.LENGTH_SHORT);
+    private void toggleColorPickerVisibility(){
+        if(mColorPickerContainer.getVisibility() == View.VISIBLE){
+            mColorPickerContainer.setVisibility(View.INVISIBLE);
+            mUndoContainer.setVisibility(View.INVISIBLE);
+
+            mIsDrawingEnabled = false;
         }
-        else{
-            mIsDrawingEnabled = true;
+        else if(mColorPickerContainer.getVisibility() == View.INVISIBLE){
+            mColorPickerContainer.setVisibility(View.VISIBLE);
+            mUndoContainer.setVisibility(View.VISIBLE);
 
             if(mStillshotImageView.getBrushColor() == 0){
                 mStillshotImageView.setBrushColor(Color.WHITE);
             }
 
-            showSnackBar("Enabled pen", Snackbar.LENGTH_SHORT);
+            mIsDrawingEnabled = true;
         }
         mStillshotImageView.setDrawingIsEnabled(mIsDrawingEnabled);
     }
 
+    private void undoAction(){
+        if(mPenContainer.getVisibility() == View.VISIBLE){
+            mStillshotImageView.removeLastPath();
+        }
+    }
 
+
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
@@ -305,6 +334,8 @@ public class Camera2Fragment extends Fragment implements
     }
 
     private void resetIconVisibilities(){
+        mColorPickerContainer.setVisibility(View.INVISIBLE);
+        mUndoContainer.setVisibility(View.INVISIBLE);
         mStillshotContainer.setVisibility(View.INVISIBLE);
         mPenContainer.setVisibility(View.VISIBLE);
 

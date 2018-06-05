@@ -176,6 +176,64 @@
 
         </RelativeLayout>
 
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:layout_toLeftOf="@+id/pen_container"
+            android:layout_alignTop="@+id/pen_container"
+            android:layout_marginRight="@dimen/stillshot_widget_spacing"
+            android:animateLayoutChanges="true"
+            android:id="@+id/undo_container">
+
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="1dp"
+                android:background="@drawable/circle_white"
+                >
+
+                <ImageView
+                    android:id="@+id/undo_icon"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:background="@drawable/circle_white"
+                    android:padding="@dimen/cam_content_inset_secondary"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/ic_undo_small"
+                    tools:ignore="ContentDescription"/>
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/color_picker_container"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="@dimen/stillshot_widget_margin_top"
+            android:layout_marginRight="@dimen/stillshot_widget_margin_sides"
+            android:layout_alignStart="@+id/pen_container"
+            android:layout_below="@+id/pen_container"
+            android:visibility="visible"
+            android:animateLayoutChanges="true">
+
+            <codingwithmitch.com.tabiancustomcamera.VerticalSlideColorPicker
+                android:id="@+id/color_picker"
+                android:layout_width="20dp"
+                android:layout_height="200dp"
+                colorpicker:borderColor="@android:color/black"
+                colorpicker:borderWidth="2dp"
+                colorpicker:colors="@array/rainbow"
+                android:layout_centerHorizontal="true"/>
+
+        </RelativeLayout>
+
 
     </RelativeLayout>
 
