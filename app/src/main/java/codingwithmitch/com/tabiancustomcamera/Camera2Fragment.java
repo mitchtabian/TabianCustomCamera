@@ -963,7 +963,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         mBackgroundHandler.post(imageSaver);
     }
 
-	private void displayCapturedImage(){
+    private void displayCapturedImage(){
         Log.d(TAG, "displayCapturedImage: displaying stillshot image.");
         final Activity activity = getActivity();
         if(activity != null){
@@ -971,7 +971,13 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 @Override
                 public void run() {
 
+                    RequestOptions options = new RequestOptions()
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .skipMemoryCache(true)
+                            .centerCrop();
+                    
                     Glide.with(activity)
+                            .setDefaultRequestOptions(options)
                             .load(mCapturedBitmap)
                             .into(mStillshotImageView);
 
