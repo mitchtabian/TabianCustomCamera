@@ -294,7 +294,7 @@ public class Camera2Fragment extends Fragment implements
     }
 
     private void undoAction(){
-        if(mPenContainer.getVisibility() == View.VISIBLE){
+        if(mIsDrawingEnabled){
             mStillshotImageView.removeLastPath();
         }
     }
