@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -24,11 +25,15 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ExifInterface;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -44,14 +49,25 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -93,6 +109,8 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
     /** Camera state: Picture was taken. */
     private static final int STATE_PICTURE_TAKEN = 4;
 
+
+    //vars
     /** A {@link Semaphore} to prevent the app from exiting before closing the camera. */
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
@@ -143,6 +161,16 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
     private float ASPECT_RATIO_ERROR_RANGE = 0.1f;
 
+    private Image mCapturedImage;
+
+    private boolean mIsImageAvailable = false;
+
+    private IMainActivity mIMainActivity;
+
+    //widgets
+
+
+
 
     public static Camera2Fragment newInstance(){
         return new Camera2Fragment();
@@ -162,18 +190,31 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onViewCreated: created view.");
         view.findViewById(R.id.stillshot).setOnClickListener(this);
+        view.findViewById(R.id.switch_orientation).setOnClickListener(this);
 
         mTextureView = view.findViewById(R.id.texture);
 
+
         setMaxSizes();
+
     }
+
+
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.stillshot: {
-                Log.d(TAG, "onClick: taking picture.");
-                takePicture();
+                if(!mIsImageAvailable){
+                    Log.d(TAG, "onClick: taking picture.");
+                    takePicture();
+                }
+                break;
+            }
+
+            case R.id.switch_orientation: {
+                Log.d(TAG, "onClick: switching camera orientation.");
+                toggleCameraDisplayOrientation();
                 break;
             }
         }
@@ -416,8 +457,15 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         public void onImageAvailable(ImageReader reader) {
             Log.d(TAG, "onImageAvailable: called.");
 
-            Image image = reader.acquireNextImage();
-            Log.d(TAG, "onImageAvailable: got the image: " + image.getTimestamp());
+            if(!mIsImageAvailable){
+                mCapturedImage = reader.acquireLatestImage();
+
+                Log.d(TAG, "onImageAvailable: captured image width: " + mCapturedImage.getWidth());
+                Log.d(TAG, "onImageAvailable: captured image height: " + mCapturedImage.getHeight());
+
+                saveTempImageToStorage();
+            }
+
         }
     };
     /**
@@ -624,7 +672,11 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
 
         try {
-            findCameraIds();
+            Log.d(TAG, "setUpCameraOutputs: called.");
+            if (!mIMainActivity.isCameraBackFacing() && !mIMainActivity.isCameraFrontFacing()) {
+                Log.d(TAG, "setUpCameraOutputs: finding camera id's.");
+                findCameraIds();
+            }
 
             CameraCharacteristics characteristics
                     = manager.getCameraCharacteristics(mCameraId);
@@ -765,22 +817,44 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
         try {
             for (String cameraId : manager.getCameraIdList()) {
-                Log.d(TAG, "setCameraOrientation: CAMERA ID: " + cameraId);
+                Log.d(TAG, "findCameraIds: CAMERA ID: " + cameraId);
                 if (cameraId == null) continue;
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
                 int facing = characteristics.get(CameraCharacteristics.LENS_FACING);
                 if (facing == CameraCharacteristics.LENS_FACING_FRONT){
-                    mCameraId = cameraId;
+                    mIMainActivity.setFrontCameraId(cameraId);
                 }
                 else if (facing == CameraCharacteristics.LENS_FACING_BACK){
-                   mCameraId = cameraId;
+                   mIMainActivity.setBackCameraId(cameraId);
                 }
             }
+            mIMainActivity.setCameraFrontFacing();
+            mCameraId = mIMainActivity.getFrontCameraId();
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
     }
 
+
+    private void toggleCameraDisplayOrientation(){
+        if(mCameraId.equals(mIMainActivity.getBackCameraId())){
+            mCameraId = mIMainActivity.getFrontCameraId();
+            mIMainActivity.setCameraFrontFacing();
+            closeCamera();
+            reopenCamera();
+            Log.d(TAG, "toggleCameraDisplayOrientation: switching to front-facing camera.");
+        }
+        else if(mCameraId.equals(mIMainActivity.getFrontCameraId())){
+            mCameraId = mIMainActivity.getBackCameraId();
+            mIMainActivity.setCameraBackFacing();
+            closeCamera();
+            reopenCamera();
+            Log.d(TAG, "toggleCameraDisplayOrientation: switching to back-facing camera.");
+        }
+        else{
+            Log.d(TAG, "toggleCameraDisplayOrientation: error.");
+        }
+    }
     /**
      * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
      * This method should be called after the camera preview size is determined in
@@ -846,6 +920,82 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    private void saveTempImageToStorage(){
+
+        Log.d(TAG, "saveTempImageToStorage: saving temp image to disk.");
+        final ICallback callback = new ICallback() {
+            @Override
+            public void done(Exception e) {
+                if(e == null){
+                    Log.d(TAG, "onImageSavedCallback: image saved!");
+
+                    mIsImageAvailable = true;
+                }
+                else{
+                    Log.d(TAG, "onImageSavedCallback: error saving image: " + e.getMessage());
+                    showSnackBar("Error displaying image", Snackbar.LENGTH_SHORT);
+                }
+            }
+        };
+
+        ImageSaver imageSaver = new ImageSaver(
+                mCapturedImage,
+                getActivity().getExternalFilesDir(null),
+                callback
+        );
+        mBackgroundHandler.post(imageSaver);
+    }
+
+
+    /**
+     * Saves a JPEG {@link Image} into the specified {@link File}.
+     */
+    private static class ImageSaver implements Runnable {
+
+        /** The file we save the image into. */
+        private final File mFile;
+
+        /** Original image that was captured */
+        private Image mImage;
+
+        private ICallback mCallback;
+
+        ImageSaver(Image image, File file, ICallback callback) {
+            mImage = image;
+            mFile = file;
+            mCallback = callback;
+        }
+
+        @Override
+        public void run() {
+
+            if(mImage != null){
+                ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                FileOutputStream output = null;
+                try {
+                    File file = new File(mFile, "temp_image.jpg");
+                    output = new FileOutputStream(file);
+                    output.write(bytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    mCallback.done(e);
+                } finally {
+                    mImage.close();
+                    if (null != output) {
+                        try {
+                            output.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    mCallback.done(null);
+                }
+            }
+        }
+    }
+
 
     /**
      * Shows a {@link Toast} on the UI thread.
@@ -865,6 +1015,15 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try{
+            mIMainActivity = (IMainActivity) getActivity();
+        }catch (ClassCastException e){
+            Log.e(TAG, "onAttach: ClassCastException: " + e.getMessage() );
+        }
+    }
 
     /**
      * Shows an error message dialog.

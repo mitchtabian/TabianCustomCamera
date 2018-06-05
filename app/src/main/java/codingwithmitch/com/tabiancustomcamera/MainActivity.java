@@ -17,15 +17,19 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements IMainActivity{
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_CODE = 1234;
+    public static String CAMERA_POSITION_FRONT;
+    public static String CAMERA_POSITION_BACK;
+    public static String MAX_ASPECT_RATIO;
 
     //widgets
 
     //vars
     private boolean mPermissions;
+    public String mCameraOrientation = "none"; // Front-facing or back-facing
 
 
     @Override
@@ -107,6 +111,55 @@ public class MainActivity extends AppCompatActivity{
     private void showSnackBar(final String text, final int length) {
         View view = this.findViewById(android.R.id.content).getRootView();
         Snackbar.make(view, text, length).show();
+    }
+
+    @Override
+    public void setCameraFrontFacing() {
+        Log.d(TAG, "setCameraFrontFacing: setting camera to front facing.");
+        mCameraOrientation = CAMERA_POSITION_FRONT;
+    }
+
+    @Override
+    public void setCameraBackFacing() {
+        Log.d(TAG, "setCameraBackFacing: setting camera to back facing.");
+        mCameraOrientation = CAMERA_POSITION_BACK;
+    }
+
+    @Override
+    public void setFrontCameraId(String cameraId){
+        CAMERA_POSITION_FRONT = cameraId;
+    }
+
+
+    @Override
+    public void setBackCameraId(String cameraId){
+        CAMERA_POSITION_BACK = cameraId;
+    }
+
+    @Override
+    public boolean isCameraFrontFacing() {
+        if(mCameraOrientation.equals(CAMERA_POSITION_FRONT)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isCameraBackFacing() {
+        if(mCameraOrientation.equals(CAMERA_POSITION_BACK)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String getBackCameraId(){
+        return CAMERA_POSITION_BACK;
+    }
+
+    @Override
+    public String getFrontCameraId(){
+        return CAMERA_POSITION_FRONT;
     }
 }
 
