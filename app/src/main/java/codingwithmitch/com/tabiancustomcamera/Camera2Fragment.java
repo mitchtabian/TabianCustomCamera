@@ -488,7 +488,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /**
+/**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
      * still image is ready to be saved.
      */
@@ -505,11 +505,26 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 Log.d(TAG, "onImageAvailable: captured image height: " + mCapturedImage.getHeight());
 
                 saveTempImageToStorage();
-                
+
+                final Activity activity = getActivity();
+                if(activity != null){
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            Glide.with(activity)
+                                    .load(mCapturedImage)
+                                    .into(mStillshotImageView);
+
+                            showStillshotContainer();
+                        }
+                    });
+                }
             }
 
         }
     };
+	
     /**
      * Retrieves the JPEG orientation from the specified screen rotation.
      *
