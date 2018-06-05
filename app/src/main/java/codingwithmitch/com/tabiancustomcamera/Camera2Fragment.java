@@ -173,7 +173,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
-    mCaptureBtnContainer;
+    mCaptureBtnContainer, mCloseStillshotContainer;
     private ImageView mStillshotImageView;
 
 
@@ -198,6 +198,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         view.findViewById(R.id.stillshot).setOnClickListener(this);
         view.findViewById(R.id.switch_orientation).setOnClickListener(this);
 
+        mCloseStillshotContainer = view.findViewById(R.id.close_stillshot_view);
         mStillshotImageView = view.findViewById(R.id.stillshot_imageview);
         mStillshotContainer = view.findViewById(R.id.stillshot_container);
         mFlashContainer = view.findViewById(R.id.flash_container);
@@ -205,8 +206,11 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         mCaptureBtnContainer = view.findViewById(R.id.capture_button_container);
         mTextureView = view.findViewById(R.id.texture);
 
-        setMaxSizes();
+        mCloseStillshotContainer.setOnClickListener(this);
 
+
+        setMaxSizes();
+        resetIconVisibilities();
     }
 
 
@@ -227,7 +231,34 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 toggleCameraDisplayOrientation();
                 break;
             }
+
+            case R.id.close_stillshot_view:{
+                hideStillshotContainer();
+                break;
+            }
         }
+    }
+
+    private void hideStillshotContainer(){
+        mIMainActivity.showStatusBar();
+        if(mIsImageAvailable){
+            mIsImageAvailable = false;
+            mCapturedBitmap = null;
+            mStillshotImageView.setImageBitmap(null);
+
+            resetIconVisibilities();
+
+            reopenCamera();
+        }
+    }
+
+    private void resetIconVisibilities(){
+        mStillshotContainer.setVisibility(View.INVISIBLE);
+
+        mFlashContainer.setVisibility(View.VISIBLE);
+        mSwitchOrientationContainer.setVisibility(View.VISIBLE);
+        mCaptureBtnContainer.setVisibility(View.VISIBLE);
+
     }
 
     /**
@@ -474,6 +505,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 Log.d(TAG, "onImageAvailable: captured image height: " + mCapturedImage.getHeight());
 
                 saveTempImageToStorage();
+                
             }
 
         }
@@ -660,7 +692,19 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         super.onResume();
 
         startBackgroundThread();
-        reopenCamera();
+
+        if(mIsImageAvailable){
+            mIMainActivity.hideStatusBar();
+        }
+        else{
+            mIMainActivity.showStatusBar();
+
+            // When the screen is turned off and turned back on, the SurfaceTexture is already
+            // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
+            // a camera and start preview from here (otherwise, we wait until the surface is ready in
+            // the SurfaceTextureListener).
+            reopenCamera();
+        }
     }
 
     @Override
@@ -975,7 +1019,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
                             .skipMemoryCache(true)
                             .centerCrop();
-                    
+
                     Glide.with(activity)
                             .setDefaultRequestOptions(options)
                             .load(mCapturedBitmap)
@@ -993,6 +1037,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         mSwitchOrientationContainer.setVisibility(View.INVISIBLE);
         mCaptureBtnContainer.setVisibility(View.INVISIBLE);
 
+        mIMainActivity.hideStatusBar();
         closeCamera();
     }
 
