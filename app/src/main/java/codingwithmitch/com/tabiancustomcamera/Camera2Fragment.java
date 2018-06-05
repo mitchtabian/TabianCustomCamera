@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -45,6 +46,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -76,7 +78,10 @@ import java.util.concurrent.TimeUnit;
  * Created by User on 5/29/2018.
  */
 
-public class Camera2Fragment extends Fragment implements View.OnClickListener {
+public class Camera2Fragment extends Fragment implements
+        View.OnClickListener,
+        View.OnTouchListener
+{
 
     private static final String TAG = "Camera2Fragment";
     private static final int REQUEST_CAMERA_PERMISSION = 1;
@@ -171,10 +176,12 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
     private BackgroundImageRotater mBackgroundImageRotater;
 
+    private boolean mIsDrawingEnabled = false;
+
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
-    mCaptureBtnContainer, mCloseStillshotContainer;
-    private ImageView mStillshotImageView;
+    mCaptureBtnContainer, mCloseStillshotContainer, mPenContainer;
+    private DrawableImageView mStillshotImageView;
 
 
 
@@ -197,7 +204,9 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         Log.d(TAG, "onViewCreated: created view.");
         view.findViewById(R.id.stillshot).setOnClickListener(this);
         view.findViewById(R.id.switch_orientation).setOnClickListener(this);
+        view.findViewById(R.id.init_draw_icon).setOnClickListener(this);
 
+        mPenContainer = view.findViewById(R.id.pen_container);
         mCloseStillshotContainer = view.findViewById(R.id.close_stillshot_view);
         mStillshotImageView = view.findViewById(R.id.stillshot_imageview);
         mStillshotContainer = view.findViewById(R.id.stillshot_container);
@@ -208,6 +217,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
         mCloseStillshotContainer.setOnClickListener(this);
 
+        mStillshotImageView.setOnTouchListener(this);
 
         setMaxSizes();
         resetIconVisibilities();
@@ -236,14 +246,56 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                 hideStillshotContainer();
                 break;
             }
+
+            case R.id.init_draw_icon:{
+                toggleEnableDraw();
+                break;
+            }
         }
     }
+
+    private void toggleEnableDraw(){
+        if(mIsDrawingEnabled){
+            mIsDrawingEnabled = false;
+
+            showSnackBar("Disabled pen", Snackbar.LENGTH_SHORT);
+        }
+        else{
+            mIsDrawingEnabled = true;
+
+            if(mStillshotImageView.getBrushColor() == 0){
+                mStillshotImageView.setBrushColor(Color.WHITE);
+            }
+
+            showSnackBar("Enabled pen", Snackbar.LENGTH_SHORT);
+        }
+        mStillshotImageView.setDrawingIsEnabled(mIsDrawingEnabled);
+    }
+
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+
+        if(mIsImageAvailable && mIsDrawingEnabled){
+            Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
+            return mStillshotImageView.touchEvent(motionEvent);
+        }
+
+        return true;
+    }
+
+
 
     private void hideStillshotContainer(){
         mIMainActivity.showStatusBar();
         if(mIsImageAvailable){
             mIsImageAvailable = false;
             mCapturedBitmap = null;
+            mStillshotImageView.setImageBitmap(null);
+
+            mIsDrawingEnabled = false;
+            mStillshotImageView.reset();
+            mStillshotImageView.setDrawingIsEnabled(mIsDrawingEnabled);
             mStillshotImageView.setImageBitmap(null);
 
             resetIconVisibilities();
@@ -254,6 +306,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
     private void resetIconVisibilities(){
         mStillshotContainer.setVisibility(View.INVISIBLE);
+        mPenContainer.setVisibility(View.VISIBLE);
 
         mFlashContainer.setVisibility(View.VISIBLE);
         mSwitchOrientationContainer.setVisibility(View.VISIBLE);
@@ -488,7 +541,7 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         }
     }
 
-/**
+    /**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
      * still image is ready to be saved.
      */
@@ -524,7 +577,6 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
         }
     };
-	
     /**
      * Retrieves the JPEG orientation from the specified screen rotation.
      *
@@ -1055,6 +1107,8 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         mIMainActivity.hideStatusBar();
         closeCamera();
     }
+
+
 
     /**
      *  WARNING!
