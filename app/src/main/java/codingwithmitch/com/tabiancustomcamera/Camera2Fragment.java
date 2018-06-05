@@ -667,6 +667,9 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
     public void onPause() {
         closeCamera();
         stopBackgroundThread();
+		if(mBackgroundImageRotater != null){
+            mBackgroundImageRotater.cancel(true);
+        }
         super.onPause();
     }
 
