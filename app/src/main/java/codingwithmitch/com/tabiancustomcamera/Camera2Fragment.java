@@ -946,8 +946,6 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
                     mBackgroundImageRotater.execute();
                     mIsImageAvailable = true;
                     mCapturedImage.close();
-
-                    displayTempImage();
                 }
                 else{
                     Log.d(TAG, "onImageSavedCallback: error saving image: " + e.getMessage());
