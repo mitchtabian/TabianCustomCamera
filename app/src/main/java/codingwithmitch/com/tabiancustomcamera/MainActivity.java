@@ -161,6 +161,44 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
     public String getFrontCameraId(){
         return CAMERA_POSITION_FRONT;
     }
+
+    @Override
+    public void hideStatusBar() {
+
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+    }
+
+    @Override
+    public void showStatusBar() {
+
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+    }
+
+    @Override
+    public void hideStillshotWidgets() {
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.drawingStarted();
+            }
+        }
+    }
+
+    @Override
+    public void showStillshotWidgets() {
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.drawingStopped();
+            }
+        }
+    }
 }
 
 

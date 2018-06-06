@@ -89,6 +89,9 @@ public class Camera2Fragment extends Fragment implements
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
 
+    /** Time it takes for icons to fade (in milliseconds) */
+    private static final int ICON_FADE_DURATION  = 400;
+
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -179,6 +182,8 @@ public class Camera2Fragment extends Fragment implements
     private BackgroundImageRotater mBackgroundImageRotater;
 
     private boolean mIsDrawingEnabled = false;
+
+    boolean mIsCurrentlyDrawing = false;
 
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
@@ -299,7 +304,28 @@ public class Camera2Fragment extends Fragment implements
         }
     }
 
+    public void drawingStarted(){
+        if(!mIsCurrentlyDrawing){
+            mColorPickerContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mUndoContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mPenContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mCloseStillshotContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
 
+            mIsCurrentlyDrawing = true;
+        }
+    }
+
+    public void drawingStopped(){
+
+        if(mIsCurrentlyDrawing){
+            mColorPickerContainer.animate().alpha(1.0f).setDuration(0);
+            mUndoContainer.animate().alpha(1.0f).setDuration(0);
+            mPenContainer.animate().alpha(1.0f).setDuration(0);
+            mCloseStillshotContainer.animate().alpha(1.0f).setDuration(0);
+
+            mIsCurrentlyDrawing = false;
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     @Override

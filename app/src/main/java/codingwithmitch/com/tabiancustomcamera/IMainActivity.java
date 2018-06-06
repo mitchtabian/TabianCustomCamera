@@ -21,4 +21,12 @@ public interface IMainActivity {
     String getFrontCameraId();
 
     String getBackCameraId();
+
+    void hideStatusBar();
+
+    void showStatusBar();
+
+    void hideStillshotWidgets();
+
+    void showStillshotWidgets();
 }

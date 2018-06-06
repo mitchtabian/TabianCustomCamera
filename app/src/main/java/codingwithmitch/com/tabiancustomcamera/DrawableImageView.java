@@ -28,12 +28,42 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
     private static final String TAG = "DrawableImageView";
 
+    private static final int SIZE_CHANGE_SPEED = 2;
+
+    //vars
     private int color;
     private float width = 8f;
     private List<Pen> mPenList = new ArrayList<Pen>();
     private Activity mHostActivity;
     private boolean mIsDrawingEnabled = false;
 
+
+    // Scales
+    float mMinWidth = 8f;
+    float mMaxWidth = 500f;
+    private ScaleGestureDetector mScaleGestureDetector;
+    private boolean mIsSizeChanging = false;
+    private Circle mCircle;
+    private int mScreenWidth;
+
+
+    private class Circle {
+
+        float x, y;
+        Paint paint;
+
+        Circle(int color, float x, float y) {
+            this.x = x;
+            this.y = y;
+            paint = new Paint();
+            paint.setAntiAlias(true);
+            paint.setStrokeWidth(width);
+            paint.setColor(color);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeJoin(Paint.Join.ROUND);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+        }
+    }
 
     private class Pen {
         Path path;
@@ -75,6 +105,12 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         setDrawingCacheEnabled(true);
         if(context instanceof Activity) {
             mHostActivity = (Activity) context;
+
+            mScaleGestureDetector = new ScaleGestureDetector(mHostActivity, new ScaleListener());
+
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            mHostActivity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            mScreenWidth = displayMetrics.widthPixels;
         }
     }
 
@@ -83,8 +119,15 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        Log.d(TAG, "onDraw: called.");
+
         for (Pen pen : mPenList) {
             canvas.drawPath(pen.path, pen.paint);
+        }
+
+        if(mCircle != null){
+            float radius = width / (float)mScreenWidth;
+            canvas.drawCircle(mCircle.x, mCircle.y, radius, mCircle.paint);
         }
     }
 
@@ -93,22 +136,85 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
         hideStatusBar();
 
-        if(mIsDrawingEnabled) {
-            float eventX = event.getX();
-            float eventY = event.getY();
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_UP:{
+                removeCircle();
+                mIsSizeChanging = false;
+                break;
+            }
+        }
 
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    mPenList.add(new Pen(color, width));
-                    mPenList.get(mPenList.size() - 1).path.moveTo(eventX, eventY);
-                    return true;
-                case MotionEvent.ACTION_MOVE:
-                    mPenList.get(mPenList.size() - 1).path.lineTo(eventX, eventY);
-                    break;
-                case MotionEvent.ACTION_UP:
-                    break;
-                default:
-                    return false;
+        if(mIsDrawingEnabled) {
+            if (event.getPointerCount() > 1) {
+
+                if (!mIsSizeChanging) {
+                    mIsSizeChanging = true;
+                }
+
+                try {
+                    mScaleGestureDetector.onTouchEvent(event);
+
+                    float[] xPositions = new float[2];
+                    float[] yPositions = new float[2];
+                    float minX = 0;
+                    float minY = 0;
+
+                    for (int i = 0; i < event.getPointerCount(); i++) {
+                        int pointerId = event.getPointerId(i);
+                        if (pointerId == MotionEvent.INVALID_POINTER_ID) {
+                            continue;
+                        }
+
+                        if (minX == 0 && minY == 0) {
+                            minX = event.getX(i);
+                            minY = event.getY(i);
+                        } else {
+                            float tempMinX = event.getX(i);
+                            float tempMinY = event.getY(i);
+                            if (tempMinX < minX) {
+                                minX = tempMinX;
+                            }
+                            if (tempMinY < minY) {
+                                minY = tempMinY;
+                            }
+                        }
+
+                        xPositions[i] = event.getX(i);
+                        yPositions[i] = event.getY(i);
+                    }
+
+                    float circleX = (Math.abs(xPositions[1] - xPositions[0]) / 2) + minX;
+                    float circleY = (Math.abs(yPositions[1] - yPositions[0]) / 2) + minY;
+
+
+                    mCircle = new Circle(color, circleX, circleY);
+
+                } catch (IndexOutOfBoundsException e) {
+                    Log.e(TAG, "touchEvent: IndexOutOfBoundsException: " + e.getMessage());
+                }
+            } else {
+
+                if (!mIsSizeChanging) {
+
+                    float eventX = event.getX();
+                    float eventY = event.getY();
+
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            mPenList.add(new Pen(color, width));
+                            mPenList.get(mPenList.size() - 1).path.moveTo(eventX, eventY);
+                            return true;
+                        case MotionEvent.ACTION_MOVE:
+                            drawingStarted();
+                            mPenList.get(mPenList.size() - 1).path.lineTo(eventX, eventY);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            drawingStopped();
+                            break;
+                        default:
+                            return false;
+                    }
+                }
             }
         }
 
@@ -116,7 +222,26 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         return true;
     }
 
+    private void drawingStarted(){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                ((MainActivity)mHostActivity).hideStillshotWidgets();
+            }
+        }
+    }
 
+    private void drawingStopped(){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                ((MainActivity)mHostActivity).showStillshotWidgets();
+            }
+        }
+        removeCircle();
+    }
+
+    private void removeCircle(){
+        mCircle = null;
+    }
 
     public void removeLastPath(){
         if(mPenList.size() > 0){
@@ -130,6 +255,7 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         for (Pen pen : mPenList) {
             pen.path.reset();
         }
+        width = mMinWidth;
         invalidate();
     }
 
@@ -160,6 +286,40 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
     public void setDrawingIsEnabled(boolean bool){
         mIsDrawingEnabled = bool;
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            return true;
+        }
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            float scaleFactor = detector.getScaleFactor();
+
+            if(scaleFactor > 1.011 || scaleFactor < 0.99) {
+
+                float prevWidth = width;
+                if(scaleFactor > 1){
+                    width += ( (SIZE_CHANGE_SPEED + (width * 0.05)) * scaleFactor );
+                }
+                else{
+                    width -= ( (SIZE_CHANGE_SPEED + (width * 0.05)) * scaleFactor );
+                }
+                if ( width > mMaxWidth) {
+                    width = prevWidth;
+                }
+                else if (width < mMinWidth) {
+                    width = prevWidth;
+                }
+
+            }
+
+
+            return true;
+        }
     }
 
 }
