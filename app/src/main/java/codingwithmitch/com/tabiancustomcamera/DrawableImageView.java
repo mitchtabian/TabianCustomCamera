@@ -53,8 +53,6 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
     // Stickers
     private ArrayList<Sticker> mStickers = new ArrayList<>();
-    int mPrevStickerX, mPrevStickerY;
-    int mSelectedStickerIndex = -1;
 
     private class Sticker{
 
@@ -73,21 +71,7 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             this.drawable = drawable;
             rect = new Rect(x, y, x + STICKER_STARTING_WIDTH, y + STICKER_STARTING_HEIGHT);
         }
-
-        public void adjustRect(){
-            rect.left = x;
-            rect.top = y;
-            rect.right = x + bitmap.getWidth();
-            rect.bottom = y + bitmap.getHeight();
-        }
-
-        public void rectPositionResize(int delta){
-            rect.left += delta;
-            rect.top += delta;
-            rect.right += delta;
-            rect.bottom += delta;
-        }
-
+        
     }
 
 
@@ -265,7 +249,7 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                 }
             }
         }
-        
+
 
         invalidate();
         return true;
