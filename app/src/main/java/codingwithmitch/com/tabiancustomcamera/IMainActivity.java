@@ -1,5 +1,7 @@
 package codingwithmitch.com.tabiancustomcamera;
 
+import android.graphics.drawable.Drawable;
+
 /**
  * Created by User on 6/5/2018.
  */
@@ -31,4 +33,6 @@ public interface IMainActivity {
     void showStillshotWidgets();
 
     void toggleViewStickersFragment();
+
+    void addSticker(Drawable sticker);
 }

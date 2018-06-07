@@ -247,6 +247,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
         transaction.add(R.id.camera_container, ViewStickersFragment.newInstance(), getString(R.string.fragment_view_stickers));
         transaction.commit();
     }
+
+    @Override
+    public void addSticker(Drawable sticker){
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.addSticker(sticker);
+            }
+        }
+    }
 }
 
 

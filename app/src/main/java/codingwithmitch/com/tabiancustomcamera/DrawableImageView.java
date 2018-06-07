@@ -29,6 +29,10 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     private static final String TAG = "DrawableImageView";
 
     private static final int SIZE_CHANGE_SPEED = 2;
+    private static final int STICKER_STARTING_WIDTH = 300;
+    private static final int STICKER_STARTING_HEIGHT = 300;
+    private static final int MIN_STICKER_WIDTH = 50;
+    private static final int MIN_STICKER_HEIGHT = 50;
 
     //vars
     private int color;
@@ -45,6 +49,46 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     private boolean mIsSizeChanging = false;
     private Circle mCircle;
     private int mScreenWidth;
+
+
+    // Stickers
+    private ArrayList<Sticker> mStickers = new ArrayList<>();
+    int mPrevStickerX, mPrevStickerY;
+    int mSelectedStickerIndex = -1;
+
+    private class Sticker{
+
+        Paint paint;
+        Bitmap bitmap;
+        Drawable drawable;
+        int x, y;
+        Rect rect;
+
+
+        Sticker(Bitmap bitmap, Drawable drawable, int x, int y){
+            paint = new Paint();
+            this.x = x;
+            this.y = y;
+            this.bitmap = bitmap;
+            this.drawable = drawable;
+            rect = new Rect(x, y, x + STICKER_STARTING_WIDTH, y + STICKER_STARTING_HEIGHT);
+        }
+
+        public void adjustRect(){
+            rect.left = x;
+            rect.top = y;
+            rect.right = x + bitmap.getWidth();
+            rect.bottom = y + bitmap.getHeight();
+        }
+
+        public void rectPositionResize(int delta){
+            rect.left += delta;
+            rect.top += delta;
+            rect.right += delta;
+            rect.bottom += delta;
+        }
+
+    }
 
 
     private class Circle {
@@ -119,7 +163,11 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        Log.d(TAG, "onDraw: called.");
+        if(mStickers.size() > 0){
+            for(Sticker sticker: mStickers){
+                canvas.drawBitmap(sticker.bitmap, sticker.x, sticker.y, sticker.paint);
+            }
+        }
 
         for (Pen pen : mPenList) {
             canvas.drawPath(pen.path, pen.paint);
@@ -217,9 +265,24 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                 }
             }
         }
+        
 
         invalidate();
         return true;
+    }
+
+
+    public void addNewSticker(Drawable drawable){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                Log.d(TAG, "addNewSticker: adding new sticker to canvas.");
+                Bitmap newStickerBitmap = drawableToBitmap(drawable);
+
+                Sticker sticker = new Sticker(newStickerBitmap, drawable,0, 200);
+                mStickers.add(sticker);
+                invalidate();
+            }
+        }
     }
 
     private void drawingStarted(){
@@ -322,6 +385,29 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         }
     }
 
+
+    public static Bitmap drawableToBitmap (Drawable drawable) {
+        Bitmap bitmap = null;
+
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if(bitmapDrawable.getBitmap() != null) {
+                return Bitmap.createScaledBitmap(bitmapDrawable.getBitmap(), STICKER_STARTING_WIDTH, STICKER_STARTING_HEIGHT, false);
+            }
+        }
+
+        if(drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
+        }
+        else {
+            bitmap = Bitmap.createBitmap(STICKER_STARTING_WIDTH, STICKER_STARTING_WIDTH, Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
 }
 
 

@@ -16,6 +16,7 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.Drawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -286,6 +287,10 @@ public class Camera2Fragment extends Fragment implements
                 break;
             }
         }
+    }
+
+    public void addSticker(Drawable sticker){
+        mStillshotImageView.addNewSticker(sticker);
     }
 
     private void toggleStickers(){

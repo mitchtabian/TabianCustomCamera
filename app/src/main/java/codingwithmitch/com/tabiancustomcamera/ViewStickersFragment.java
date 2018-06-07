@@ -33,7 +33,7 @@ public class ViewStickersFragment extends Fragment implements
     //vars
     private ArrayList<Drawable> mStickers = new ArrayList<>();
     private IMainActivity mIMainActivity;
-	private StickerAdapter mStickerAdapter;
+    private StickerAdapter mStickerAdapter;
 
     public static ViewStickersFragment newInstance() {
         return new ViewStickersFragment();
@@ -82,7 +82,9 @@ public class ViewStickersFragment extends Fragment implements
 
     @Override
     public void onStickerClicked(int position) {
+        mIMainActivity.addSticker(mStickers.get(position));
 
+        mIMainActivity.toggleViewStickersFragment();
     }
 
     @Override
