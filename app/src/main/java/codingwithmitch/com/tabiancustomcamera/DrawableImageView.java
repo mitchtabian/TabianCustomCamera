@@ -55,6 +55,7 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     private ArrayList<Sticker> mStickers = new ArrayList<>();
     int mPrevStickerX, mPrevStickerY;
     int mSelectedStickerIndex = -1;
+    private boolean mIsStickerResizing = false;
 
     private class Sticker{
 
@@ -285,8 +286,22 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
                     if(mSelectedStickerIndex != -1){
 
+                        if(event.getPointerCount() > 1){
+                            mIsStickerResizing = true;
+                        }
+                        else{
+                            mIsStickerResizing = false;
+
+                            moveSticker(newPositionX, newPositionY);
+
+                        }
+                    }
+
+                    if(mIsStickerResizing){
+
                         moveSticker(newPositionX, newPositionY);
 
+                        mScaleGestureDetector.onTouchEvent(event);
                     }
 
                     break;
@@ -318,6 +333,8 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     private void resetSticker(int newPositionX, int newPositionY){
 
         mSelectedStickerIndex = -1; // reset the sticker index
+
+        mIsStickerResizing = false;
     }
 
     private void moveSticker(int newPositionX, int newPositionY){
@@ -429,18 +446,31 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
             if(scaleFactor > 1.011 || scaleFactor < 0.99) {
 
-                float prevWidth = width;
-                if(scaleFactor > 1){
-                    width += ( (SIZE_CHANGE_SPEED + (width * 0.05)) * scaleFactor );
+                if(mSelectedStickerIndex != -1){
+                    mStickers.get(mSelectedStickerIndex).bitmap
+                            = resizeBitmap(
+                            mStickers.get(mSelectedStickerIndex).drawable,
+                            mStickers.get(mSelectedStickerIndex).bitmap,
+                            scaleFactor
+                    );
+
+                    mIsStickerResizing = true;
+
                 }
                 else{
-                    width -= ( (SIZE_CHANGE_SPEED + (width * 0.05)) * scaleFactor );
-                }
-                if ( width > mMaxWidth) {
-                    width = prevWidth;
-                }
-                else if (width < mMinWidth) {
-                    width = prevWidth;
+                    float prevWidth = width;
+                    if(scaleFactor > 1){
+                        width += ( (SIZE_CHANGE_SPEED + (width * 0.05)) * scaleFactor );
+                    }
+                    else{
+                        width -= ( (SIZE_CHANGE_SPEED + (width * 0.05)) * scaleFactor );
+                    }
+                    if ( width > mMaxWidth) {
+                        width = prevWidth;
+                    }
+                    else if (width < mMinWidth) {
+                        width = prevWidth;
+                    }
                 }
 
             }
@@ -450,6 +480,50 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         }
     }
 
+    public static Bitmap resizeBitmap(Drawable drawable, Bitmap currentBitmap, float scale){
+        Bitmap bitmap = null;
+
+        int newWidth = 0;
+        int newHeight = 0;
+        if(scale > 1){
+            newWidth = currentBitmap.getWidth() + (int)((currentBitmap.getWidth() * 0.04) * scale);
+            newHeight = currentBitmap.getHeight() + (int)((currentBitmap.getHeight() * 0.04) * scale);
+        }
+        else{
+            newWidth = currentBitmap.getWidth() - (int)((currentBitmap.getHeight() * 0.04) * scale);
+            newHeight = currentBitmap.getHeight() - (int)((currentBitmap.getHeight() * 0.04) * scale);
+        }
+
+        if(newWidth < MIN_STICKER_WIDTH){
+            newWidth = currentBitmap.getWidth();
+        }
+        if(newHeight < MIN_STICKER_HEIGHT){
+            newHeight = currentBitmap.getHeight();
+        }
+
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if(bitmapDrawable.getBitmap() != null) {
+                return Bitmap.createScaledBitmap(
+                        bitmapDrawable.getBitmap(),
+                        newWidth,
+                        newHeight,
+                        false);
+            }
+        }
+
+        if(drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
+        }
+        else {
+            bitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, newWidth, newHeight);
+        drawable.draw(canvas);
+        return bitmap;
+    }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {
         Bitmap bitmap = null;
