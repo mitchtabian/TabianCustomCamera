@@ -244,6 +244,7 @@ public class Camera2Fragment extends Fragment implements
         mUndoContainer.setOnClickListener(this);
 
         mStillshotImageView.setOnTouchListener(this);
+        mTextureView.setOnTouchListener(this);
 
         mVerticalSlideColorPicker.setOnColorChangeListener(this);
 
@@ -446,12 +447,15 @@ public class Camera2Fragment extends Fragment implements
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
+
         if(mIsImageAvailable){
             Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
             return mStillshotImageView.touchEvent(motionEvent);
         }
-
-        return true;
+        else{
+            Log.d(TAG, "onTouch: ZOOM.");
+            return mTextureView.onTouch(view, motionEvent);
+        }
     }
 
 
@@ -554,6 +558,19 @@ public class Camera2Fragment extends Fragment implements
             Log.d(TAG, "reopenCamera: no surface is available.");
             mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
+
+        //------------------- Get display fileSize  ---------------------------------
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        int displayWidth = displayMetrics.widthPixels;
+
+        int displayHeight = displayMetrics.heightPixels;
+
+        Log.d(TAG, "reopenCamera: texture width: " + displayWidth);
+        Log.d(TAG, "reopenCamera: texture height: " + displayHeight);
+
+        mTextureView.setDisplayMetrics(displayWidth, displayHeight);
     }
 
     private void openCamera(int width, int height) {
