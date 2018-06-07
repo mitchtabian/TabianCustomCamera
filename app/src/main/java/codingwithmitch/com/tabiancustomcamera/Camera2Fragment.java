@@ -187,7 +187,8 @@ public class Camera2Fragment extends Fragment implements
 
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
-    mCaptureBtnContainer, mCloseStillshotContainer, mPenContainer, mUndoContainer, mColorPickerContainer;
+    mCaptureBtnContainer, mCloseStillshotContainer, mPenContainer, mUndoContainer, mColorPickerContainer,
+    mSaveContainer;
     private DrawableImageView mStillshotImageView;
     private VerticalSlideColorPicker mVerticalSlideColorPicker;
 
@@ -213,7 +214,9 @@ public class Camera2Fragment extends Fragment implements
         view.findViewById(R.id.stillshot).setOnClickListener(this);
         view.findViewById(R.id.switch_orientation).setOnClickListener(this);
         view.findViewById(R.id.init_draw_icon).setOnClickListener(this);
+        view.findViewById(R.id.save_stillshot).setOnClickListener(this);
 
+        mSaveContainer = view.findViewById(R.id.save_container);
         mVerticalSlideColorPicker = view.findViewById(R.id.color_picker);
         mUndoContainer = view.findViewById(R.id.undo_container);
         mColorPickerContainer = view.findViewById(R.id.color_picker_container);
@@ -269,6 +272,46 @@ public class Camera2Fragment extends Fragment implements
             case R.id.undo_container:{
                 undoAction();
                 break;
+            }
+
+            case R.id.save_stillshot:{
+                saveCapturedStillshotToDisk();
+                break;
+            }
+        }
+    }
+
+    private void saveCapturedStillshotToDisk(){
+        if(mIsImageAvailable){
+            Log.d(TAG, "saveCapturedStillshotToDisk: saving image to disk.");
+
+            final ICallback callback = new ICallback() {
+                @Override
+                public void done(Exception e) {
+                    if(e == null){
+                        Log.d(TAG, "onImageSavedCallback: image saved!");
+                        showSnackBar("Image saved", Snackbar.LENGTH_SHORT);
+                    }
+                    else{
+                        Log.d(TAG, "onImageSavedCallback: error saving image: " + e.getMessage());
+                        showSnackBar("Error saving image", Snackbar.LENGTH_SHORT);
+                    }
+                }
+            };
+
+            if(mCapturedImage != null){
+
+                Log.d(TAG, "saveCapturedStillshotToDisk: saving to disk.");
+
+                mStillshotImageView.invalidate();
+                Bitmap bitmap = Bitmap.createBitmap(mStillshotImageView.getDrawingCache());
+
+                ImageSaver imageSaver = new ImageSaver(
+                        bitmap,
+                        getActivity().getExternalFilesDir(null),
+                        callback
+                );
+                mBackgroundHandler.post(imageSaver);
             }
         }
     }
@@ -1279,6 +1322,14 @@ public class Camera2Fragment extends Fragment implements
 
         private ICallback mCallback;
 
+        private Bitmap mBitmap;
+
+        ImageSaver(Bitmap bitmap, File file, ICallback callback) {
+            mBitmap = bitmap;
+            mFile = file;
+            mCallback = callback;
+        }
+
         ImageSaver(Image image, File file, ICallback callback) {
             mImage = image;
             mFile = file;
@@ -1310,6 +1361,36 @@ public class Camera2Fragment extends Fragment implements
                         }
                     }
                     mCallback.done(null);
+                }
+            }
+            else if(mBitmap != null){
+                ByteArrayOutputStream stream = null;
+                byte[] imageByteArray = null;
+                stream = new ByteArrayOutputStream();
+                mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                imageByteArray = stream.toByteArray();
+
+                SimpleDateFormat s = new SimpleDateFormat("ddMMyyyyhhmmss");
+                String format = s.format(new Date());
+                File file = new File(mFile, "image_" + format + ".jpg");
+
+                // save the mirrored byte array
+                FileOutputStream output = null;
+                try {
+                    output = new FileOutputStream(file);
+                    output.write(imageByteArray);
+                } catch (IOException e) {
+                    mCallback.done(e);
+                    e.printStackTrace();
+                } finally {
+                    if (null != output) {
+                        try {
+                            output.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        mCallback.done(null);
+                    }
                 }
             }
         }
