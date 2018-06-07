@@ -35,4 +35,6 @@ public interface IMainActivity {
     void toggleViewStickersFragment();
 
     void addSticker(Drawable sticker);
+
+    void setTrashIconSize(int width, int height);
 }

@@ -53,6 +53,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -189,8 +190,9 @@ public class Camera2Fragment extends Fragment implements
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
     mCaptureBtnContainer, mCloseStillshotContainer, mPenContainer, mUndoContainer, mColorPickerContainer,
-    mSaveContainer, mStickerContainer;
+    mSaveContainer, mStickerContainer, mTrashContainer;
     private DrawableImageView mStillshotImageView;
+    private ImageButton mTrashIcon, mFlashIcon;
     private VerticalSlideColorPicker mVerticalSlideColorPicker;
 
 
@@ -218,6 +220,10 @@ public class Camera2Fragment extends Fragment implements
         view.findViewById(R.id.save_stillshot).setOnClickListener(this);
         view.findViewById(R.id.init_sticker_icon).setOnClickListener(this);
 
+        mTrashContainer = view.findViewById(R.id.trash_container);
+        mTrashIcon = view.findViewById(R.id.trash);
+        mFlashIcon = view.findViewById(R.id.flash_toggle);
+        mFlashContainer = view.findViewById(R.id.flash_container);
         mStickerContainer = view.findViewById(R.id.sticker_container);
         mSaveContainer = view.findViewById(R.id.save_container);
         mVerticalSlideColorPicker = view.findViewById(R.id.color_picker);
@@ -232,6 +238,8 @@ public class Camera2Fragment extends Fragment implements
         mCaptureBtnContainer = view.findViewById(R.id.capture_button_container);
         mTextureView = view.findViewById(R.id.texture);
 
+        mFlashIcon.setOnClickListener(this);
+        mTrashIcon.setOnClickListener(this);
         mCloseStillshotContainer.setOnClickListener(this);
         mUndoContainer.setOnClickListener(this);
 
@@ -293,6 +301,45 @@ public class Camera2Fragment extends Fragment implements
         mStillshotImageView.addNewSticker(sticker);
     }
 
+    public void setTrashIconSize(int width, int height){
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mTrashIcon.getLayoutParams();
+
+        final float scale = getContext().getResources().getDisplayMetrics().density;
+
+        params.height = (int) (width * scale + 0.5f);
+        params.width = (int) (height * scale + 0.5f);;
+        mTrashIcon.setLayoutParams(params);
+    }
+
+    public void dragStickerStarted(){
+        if(mStillshotImageView.mSelectedStickerIndex != -1){
+            mColorPickerContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mUndoContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mPenContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mSaveContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mCloseStillshotContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mStickerContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+
+            // show the trash can container
+            mTrashContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void dragStickerStopped(){
+        if(mStillshotImageView.mSelectedStickerIndex == -1){
+            mColorPickerContainer.animate().alpha(1.0f).setDuration(0);
+            mUndoContainer.animate().alpha(1.0f).setDuration(0);
+            mPenContainer.animate().alpha(1.0f).setDuration(0);
+            mSaveContainer.animate().alpha(1.0f).setDuration(0);
+            mCloseStillshotContainer.animate().alpha(1.0f).setDuration(0);
+            mStickerContainer.animate().alpha(1.0f).setDuration(0);
+
+
+            // hide the trash can container
+            mTrashContainer.setVisibility(View.INVISIBLE);
+        }
+    }
+
     private void toggleStickers(){
         Log.d(TAG, "displayStickers: called.");
         mIMainActivity.toggleViewStickersFragment();
@@ -343,6 +390,7 @@ public class Camera2Fragment extends Fragment implements
             mColorPickerContainer.setVisibility(View.INVISIBLE);
             mUndoContainer.setVisibility(View.INVISIBLE);
             mStickerContainer.setVisibility(View.VISIBLE);
+            mTrashContainer.setVisibility(View.INVISIBLE);
 
             mIsDrawingEnabled = false;
         }
@@ -350,6 +398,7 @@ public class Camera2Fragment extends Fragment implements
             mColorPickerContainer.setVisibility(View.VISIBLE);
             mUndoContainer.setVisibility(View.VISIBLE);
             mStickerContainer.setVisibility(View.INVISIBLE);
+            mTrashContainer.setVisibility(View.INVISIBLE);
 
             if(mStillshotImageView.getBrushColor() == 0){
                 mStillshotImageView.setBrushColor(Color.WHITE);
@@ -435,6 +484,7 @@ public class Camera2Fragment extends Fragment implements
         mFlashContainer.setVisibility(View.VISIBLE);
         mSwitchOrientationContainer.setVisibility(View.VISIBLE);
         mCaptureBtnContainer.setVisibility(View.VISIBLE);
+        mTrashContainer.setVisibility(View.INVISIBLE);
 
     }
 

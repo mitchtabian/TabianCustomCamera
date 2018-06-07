@@ -257,6 +257,34 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
             }
         }
     }
+
+    @Override
+    public void setTrashIconSize(int width, int height){
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.setTrashIconSize(width, height);
+            }
+        }
+    }
+
+    public void dragStickerStarted(){
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.dragStickerStarted();
+            }
+        }
+    }
+
+    public void dragStickerStopped(){
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.dragStickerStopped();
+            }
+        }
+    }
 }
 
 

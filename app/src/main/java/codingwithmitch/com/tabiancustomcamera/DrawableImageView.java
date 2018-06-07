@@ -33,6 +33,8 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     private static final int STICKER_STARTING_HEIGHT = 300;
     private static final int MIN_STICKER_WIDTH = 50;
     private static final int MIN_STICKER_HEIGHT = 50;
+    private static final int TRASH_ICON_ENLARGED_SIZE = 55;
+    private static final int TRASH_ICON_NORMAL_SIZE = 44;
 
     //vars
     private int color;
@@ -56,6 +58,9 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     int mPrevStickerX, mPrevStickerY;
     int mSelectedStickerIndex = -1;
     private boolean mIsStickerResizing = false;
+
+    // Trash can location
+    Rect trashRect;
 
     private class Sticker{
 
@@ -148,6 +153,18 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             DisplayMetrics displayMetrics = new DisplayMetrics();
             mHostActivity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             mScreenWidth = displayMetrics.widthPixels;
+
+            int screenHeight = displayMetrics.heightPixels;
+
+            float density = displayMetrics.density;
+            int bottomMargin = (int)mHostActivity.getResources().getDimension(R.dimen.cam_widget_margin_bottom);
+
+            int left = (mScreenWidth / 2) - (int) ( (TRASH_ICON_NORMAL_SIZE ) * density + 0.5f);
+            int top = screenHeight - (int) ( (bottomMargin + TRASH_ICON_NORMAL_SIZE ) * density + 0.5f);;
+            int right = (mScreenWidth / 2) + (int) ( (TRASH_ICON_NORMAL_SIZE ) * density + 0.5f);
+            int bottom = screenHeight;
+
+            trashRect = new Rect(left, top, right, bottom);
         }
     }
 
@@ -294,6 +311,12 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
                             moveSticker(newPositionX, newPositionY);
 
+                            if(trashRect.contains(newPositionX, newPositionY)){
+                                enlargeTrashIcon();
+                            }
+                            else{
+                                shrinkTrashIcon();
+                            }
                         }
                     }
 
@@ -315,6 +338,8 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                             mPrevStickerX = newPositionX;
                             mPrevStickerY = newPositionY;
 
+                            dragStickerStarted();
+
                             break; // break the loop
                         }
                     }
@@ -329,12 +354,53 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         return true;
     }
 
+    private void dragStickerStarted(){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                ((MainActivity)mHostActivity).dragStickerStarted();
+            }
+        }
+    }
+
+    private void dragStickerStopped(){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                ((MainActivity)mHostActivity).dragStickerStopped();
+            }
+        }
+        removeCircle();
+    }
+
+    public void removeSticker(){
+        if(mSelectedStickerIndex != -1){
+            mStickers.remove(mSelectedStickerIndex);
+            invalidate();
+        }
+    }
+
+    public void enlargeTrashIcon(){
+        if(mHostActivity instanceof MainActivity){
+            ((MainActivity)mHostActivity).setTrashIconSize(TRASH_ICON_ENLARGED_SIZE, TRASH_ICON_ENLARGED_SIZE);
+        }
+    }
+
+    public void shrinkTrashIcon(){
+        if(mHostActivity instanceof MainActivity){
+            ((MainActivity)mHostActivity).setTrashIconSize(TRASH_ICON_NORMAL_SIZE, TRASH_ICON_NORMAL_SIZE);
+        }
+    }
 
     private void resetSticker(int newPositionX, int newPositionY){
+        if(trashRect.contains(newPositionX, newPositionY)){
+            removeSticker();
+        }
 
         mSelectedStickerIndex = -1; // reset the sticker index
-
         mIsStickerResizing = false;
+
+        dragStickerStopped();
+        shrinkTrashIcon();
+
     }
 
     private void moveSticker(int newPositionX, int newPositionY){
