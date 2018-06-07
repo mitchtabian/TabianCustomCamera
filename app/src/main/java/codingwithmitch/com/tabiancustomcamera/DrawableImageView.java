@@ -53,6 +53,8 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
     // Stickers
     private ArrayList<Sticker> mStickers = new ArrayList<>();
+    int mPrevStickerX, mPrevStickerY;
+    int mSelectedStickerIndex = -1;
 
     private class Sticker{
 
@@ -71,7 +73,13 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             this.drawable = drawable;
             rect = new Rect(x, y, x + STICKER_STARTING_WIDTH, y + STICKER_STARTING_HEIGHT);
         }
-        
+
+        public void adjustRect(){
+            rect.left = x;
+            rect.top = y;
+            rect.right = x + bitmap.getWidth();
+            rect.bottom = y + bitmap.getHeight();
+        }
     }
 
 
@@ -250,9 +258,82 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             }
         }
 
+        if(mStickers.size() > 0){
+
+            int newPositionX = (int)event.getX();
+            int newPositionY = (int)event.getY();
+
+            switch(event.getAction()){
+
+                case MotionEvent.ACTION_UP:{
+                    Log.d(TAG, "touchEvent: reset sticker index.");
+
+                    resetSticker(newPositionX, newPositionY);
+
+                    break;
+                }
+
+                case MotionEvent.ACTION_POINTER_UP:{
+                    Log.d(TAG, "touchEvent: reset sticker index.");
+
+                    resetSticker(newPositionX, newPositionY);
+
+                    break;
+                }
+
+                case MotionEvent.ACTION_MOVE:{
+
+                    if(mSelectedStickerIndex != -1){
+
+                        moveSticker(newPositionX, newPositionY);
+
+                    }
+
+                    break;
+                }
+
+                case MotionEvent.ACTION_DOWN:{
+                    for(int i = 0; i < mStickers.size(); i++){
+                        if(mStickers.get(i).rect.contains(newPositionX, newPositionY)){
+                            Log.d(TAG, "touchEvent: touched a STICKER.");
+                            mSelectedStickerIndex = i;
+                            mPrevStickerX = newPositionX;
+                            mPrevStickerY = newPositionY;
+
+                            break; // break the loop
+                        }
+                    }
+                    break;
+                }
+
+            }
+
+        }
 
         invalidate();
         return true;
+    }
+
+
+    private void resetSticker(int newPositionX, int newPositionY){
+
+        mSelectedStickerIndex = -1; // reset the sticker index
+    }
+
+    private void moveSticker(int newPositionX, int newPositionY){
+        int dx = newPositionX - mPrevStickerX;
+        int dy = newPositionY - mPrevStickerY;
+
+        mPrevStickerX = newPositionX;
+        mPrevStickerY = newPositionY;
+
+        mStickers.get(mSelectedStickerIndex).x
+                = mStickers.get(mSelectedStickerIndex).x + dx;
+
+        mStickers.get(mSelectedStickerIndex).y
+                = mStickers.get(mSelectedStickerIndex).y + dy;
+
+        mStickers.get(mSelectedStickerIndex).adjustRect();
     }
 
 
