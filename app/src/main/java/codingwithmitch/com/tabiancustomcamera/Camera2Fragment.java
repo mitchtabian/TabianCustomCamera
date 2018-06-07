@@ -397,7 +397,7 @@ public class Camera2Fragment extends Fragment implements
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
-        if(mIsImageAvailable && mIsDrawingEnabled){
+        if(mIsImageAvailable){
             Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
             return mStillshotImageView.touchEvent(motionEvent);
         }
