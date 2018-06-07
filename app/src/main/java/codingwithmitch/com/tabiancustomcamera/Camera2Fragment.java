@@ -351,6 +351,7 @@ public class Camera2Fragment extends Fragment implements
         if(!mIsCurrentlyDrawing){
             mColorPickerContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
             mUndoContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
+            mSaveContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
             mPenContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
             mCloseStillshotContainer.animate().alpha(0.0f).setDuration(ICON_FADE_DURATION);
 
@@ -364,6 +365,7 @@ public class Camera2Fragment extends Fragment implements
             mColorPickerContainer.animate().alpha(1.0f).setDuration(0);
             mUndoContainer.animate().alpha(1.0f).setDuration(0);
             mPenContainer.animate().alpha(1.0f).setDuration(0);
+            mSaveContainer.animate().alpha(1.0f).setDuration(0);
             mCloseStillshotContainer.animate().alpha(1.0f).setDuration(0);
 
             mIsCurrentlyDrawing = false;
