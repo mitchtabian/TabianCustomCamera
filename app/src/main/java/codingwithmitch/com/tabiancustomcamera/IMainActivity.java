@@ -29,4 +29,6 @@ public interface IMainActivity {
     void hideStillshotWidgets();
 
     void showStillshotWidgets();
+
+    void toggleViewStickersFragment();
 }

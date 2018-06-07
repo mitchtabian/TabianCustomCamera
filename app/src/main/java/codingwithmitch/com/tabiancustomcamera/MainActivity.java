@@ -199,6 +199,54 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
             }
         }
     }
+
+    @Override
+    public void toggleViewStickersFragment(){
+
+        ViewStickersFragment viewStickersFragment
+                = (ViewStickersFragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_view_stickers));
+        if (viewStickersFragment != null) {
+            if(viewStickersFragment.isVisible()){
+                hideViewStickersFragment(viewStickersFragment);
+            }
+            else{
+                showViewStickersFragment(viewStickersFragment);
+            }
+        }
+        else{
+            inflateViewStickersFragment();
+        }
+    }
+
+    private void hideViewStickersFragment(ViewStickersFragment fragment){
+
+        showStillshotWidgets();
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.slide_in_up, R.anim.slide_in_down, R.anim.slide_out_down, R.anim.slide_out_up);
+        transaction.hide(fragment);
+        transaction.commit();
+    }
+
+    private void showViewStickersFragment(ViewStickersFragment fragment){
+
+        hideStillshotWidgets();
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.slide_in_up, R.anim.slide_in_down, R.anim.slide_out_down, R.anim.slide_out_up);
+        transaction.show(fragment);
+        transaction.commit();
+    }
+
+    private void inflateViewStickersFragment(){
+
+        hideStillshotWidgets();
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.slide_in_up, R.anim.slide_in_down, R.anim.slide_out_down, R.anim.slide_out_up);
+        transaction.add(R.id.camera_container, ViewStickersFragment.newInstance(), getString(R.string.fragment_view_stickers));
+        transaction.commit();
+    }
 }
 
 
