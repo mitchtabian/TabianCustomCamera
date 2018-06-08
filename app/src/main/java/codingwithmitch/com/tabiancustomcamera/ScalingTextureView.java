@@ -41,7 +41,7 @@ public class ScalingTextureView extends TextureView {
     public float mImageCenterX = 0.f;
 
     public float mImageCenterY = 0.f;
-    
+
 
 
     public ScalingTextureView(Context context) {
@@ -107,15 +107,8 @@ public class ScalingTextureView extends TextureView {
         mMoveDetector = new MoveGestureDetector(context, new MoveListener());
     }
 
-    public void setDisplayMetrics(int width, int height) {
 
-        mImageCenterX = width / 2;
-
-        mImageCenterY = height / 2;
-    }
-
-
-    public boolean onTouch(View view, MotionEvent motionEvent) {
+    public boolean onTouch(MotionEvent motionEvent) {
 
         mScaleDetector.onTouchEvent(motionEvent);
 
