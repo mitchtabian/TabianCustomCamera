@@ -41,10 +41,7 @@ public class ScalingTextureView extends TextureView {
     public float mImageCenterX = 0.f;
 
     public float mImageCenterY = 0.f;
-
-    public float mFocusX = 0.f;
-
-    public float mFocusY = 0.f;
+    
 
 
     public ScalingTextureView(Context context) {
@@ -187,8 +184,6 @@ public class ScalingTextureView extends TextureView {
 
             setAlpha(1);
 
-            mFocusX = dx + scaledImageCenterX;
-            mFocusY = dy + scaledImageCenterY;
         }
         return true; // indicate event was handled
 
@@ -229,8 +224,6 @@ public class ScalingTextureView extends TextureView {
         mScaleFactor = 1.0f;
         mImageCenterX = mRatioWidth / 2;
         mImageCenterX = mRatioHeight / 2;
-        mFocusX = 0f;
-        mFocusY = 0f;
     }
 
 }
