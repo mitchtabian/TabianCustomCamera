@@ -474,6 +474,8 @@ public class Camera2Fragment extends Fragment implements
 
             resetIconVisibilities();
 
+            mTextureView.resetScale();
+
             reopenCamera();
         }
     }
@@ -1261,15 +1263,67 @@ public class Camera2Fragment extends Fragment implements
                 @Override
                 public void run() {
 
+                    mStillshotImageView.reset();
+                    mStillshotImageView.setDrawingCacheEnabled(true);
+                    mStillshotImageView.buildDrawingCache();
+
                     RequestOptions options = new RequestOptions()
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
                             .skipMemoryCache(true)
                             .centerCrop();
 
+                    int bitmapWidth = mCapturedBitmap.getWidth();
+                    int bitmapHeight = mCapturedBitmap.getHeight();
+
+                    Log.d(TAG, "run: captured image width: " + bitmapWidth);
+                    Log.d(TAG, "run: captured image height: " + bitmapHeight);
+
+
+                    int focusX = (int)(mTextureView.mFocusX);
+                    int focusY = (int)(mTextureView.mFocusY);
+                    Log.d(TAG, "run: focusX: " + focusX);
+                    Log.d(TAG, "run: focusY: " + focusY);
+
+
+                    int maxWidth = mTextureView.getWidth();
+                    int maxHeight = mTextureView.getHeight();
+                    Log.d(TAG, "run: initial maxWidth: " + maxWidth);
+                    Log.d(TAG, "run: initial maxHeight: " + maxHeight);
+
+                    float bitmapHeightScaleFactor = (float)bitmapHeight / (float)maxHeight;
+                    float bitmapWidthScaleFactor = (float)bitmapWidth / (float)maxWidth;
+                    Log.d(TAG, "run: bitmap width scale factor: " + bitmapWidthScaleFactor);
+                    Log.d(TAG, "run: bitmap height scale factor: " + bitmapHeightScaleFactor);
+
+                    int actualWidth = (int)(maxWidth * (1 / mTextureView.mScaleFactorX));
+                    int actualHeight = (int)(maxHeight * (1 / mTextureView.mScaleFactorY));
+                    Log.d(TAG, "run: actual width: " + actualWidth);
+                    Log.d(TAG, "run: actual height: " + actualHeight);
+
+
+                    int scaledWidth = (int)(actualWidth * bitmapWidthScaleFactor);
+                    int scaledHeight = (int)(actualHeight * bitmapHeightScaleFactor);
+                    Log.d(TAG, "run: scaled width: " + scaledWidth);
+                    Log.d(TAG, "run: scaled height: " + scaledHeight);
+
+                    focusX *= bitmapWidthScaleFactor;
+                    focusY *= bitmapHeightScaleFactor;
+
+                    Bitmap background = null;
+                    background = Bitmap.createBitmap(
+                            mCapturedBitmap,
+                            focusX,
+                            focusY,
+                            scaledWidth,
+                            scaledHeight
+                    );
+
                     Glide.with(activity)
                             .setDefaultRequestOptions(options)
-                            .load(mCapturedBitmap)
+                            .load(background)
                             .into(mStillshotImageView);
+
+
 
                     showStillshotContainer();
                 }
