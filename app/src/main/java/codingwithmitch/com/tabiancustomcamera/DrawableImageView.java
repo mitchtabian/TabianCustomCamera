@@ -303,6 +303,7 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             pen.path.reset();
         }
         width = mMinWidth;
+        mStickers.clear();
         invalidate();
     }
 
