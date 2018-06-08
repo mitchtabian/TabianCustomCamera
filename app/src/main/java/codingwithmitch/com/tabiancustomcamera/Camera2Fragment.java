@@ -454,7 +454,7 @@ public class Camera2Fragment extends Fragment implements
         }
         else{
             Log.d(TAG, "onTouch: ZOOM.");
-            return mTextureView.onTouch(view, motionEvent);
+            return mTextureView.onTouch(motionEvent);
         }
     }
 
@@ -559,18 +559,6 @@ public class Camera2Fragment extends Fragment implements
             mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
 
-        //------------------- Get display fileSize  ---------------------------------
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
-        int displayWidth = displayMetrics.widthPixels;
-
-        int displayHeight = displayMetrics.heightPixels;
-
-        Log.d(TAG, "reopenCamera: texture width: " + displayWidth);
-        Log.d(TAG, "reopenCamera: texture height: " + displayHeight);
-
-        mTextureView.setDisplayMetrics(displayWidth, displayHeight);
     }
 
     private void openCamera(int width, int height) {
