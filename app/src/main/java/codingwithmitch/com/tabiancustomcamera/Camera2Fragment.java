@@ -470,20 +470,20 @@ public class Camera2Fragment extends Fragment implements
             }
 
             case MotionEvent.ACTION_MOVE:{
+
                 break;
             }
         }
 
-//        if(mIsImageAvailable){
-//            Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
-//            return mStillshotImageView.touchEvent(motionEvent);
-//        }
-//        else{
-//            Log.d(TAG, "onTouch: ZOOM.");
-//            return mTextureView.onTouch(motionEvent);
-//        }
+        if(mIsImageAvailable){
+            Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
+            return mStillshotImageView.touchEvent(motionEvent);
+        }
+        else{
+            Log.d(TAG, "onTouch: ZOOM.");
+            return mTextureView.onTouch(motionEvent);
+        }
 
-        return true;
     }
 
     private boolean mManualFocusEngaged = false;
