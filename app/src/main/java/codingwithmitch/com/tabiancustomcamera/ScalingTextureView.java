@@ -21,7 +21,7 @@ import codingwithmitch.com.tabiancustomcamera.gestures.MoveGestureDetector;
 /**
  * A {@link TextureView} that can be adjusted to a specified aspect ratio.
  */
-public class ScalingTextureView extends TextureView implements View.OnTouchListener{
+public class ScalingTextureView extends TextureView {
 
     private static final String TAG = "ScalingTextureView";
 
@@ -117,7 +117,7 @@ public class ScalingTextureView extends TextureView implements View.OnTouchListe
         mImageCenterY = height / 2;
     }
 
-    @Override
+
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
         mScaleDetector.onTouchEvent(motionEvent);
