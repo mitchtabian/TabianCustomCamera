@@ -123,6 +123,11 @@ public class Camera2Fragment extends Fragment implements
     /** Camera state: Picture was taken. */
     private static final int STATE_PICTURE_TAKEN = 4;
 
+    /** States for the flash */
+    private static final int FLASH_STATE_OFF = 0;
+    private static final int FLASH_STATE_ON = 1;
+    private static final int FLASH_STATE_AUTO = 2;
+
 
     //vars
     /** A {@link Semaphore} to prevent the app from exiting before closing the camera. */
@@ -188,6 +193,10 @@ public class Camera2Fragment extends Fragment implements
     private boolean mIsDrawingEnabled = false;
 
     boolean mIsCurrentlyDrawing = false;
+
+    private int mFlashState = 0;
+
+    private boolean mFlashSupported;
 
     //widgets
     private RelativeLayout mStillshotContainer, mFlashContainer, mSwitchOrientationContainer,
@@ -296,6 +305,63 @@ public class Camera2Fragment extends Fragment implements
             case R.id.init_sticker_icon:{
                 toggleStickers();
                 break;
+            }
+
+            case R.id.flash_toggle: {
+                if(!mIsImageAvailable){
+                    toggleFlashState();
+                }
+                break;
+            }
+        }
+    }
+
+    private void toggleFlashState(){
+        if(mFlashState == FLASH_STATE_OFF){
+            mFlashState = FLASH_STATE_ON;
+        }
+        else if(mFlashState == FLASH_STATE_ON){
+            mFlashState = FLASH_STATE_AUTO;
+        }
+        else if(mFlashState == FLASH_STATE_AUTO){
+            mFlashState = FLASH_STATE_OFF;
+        }
+        setFlashIcon();
+    }
+
+    private void setFlashIcon(){
+        if(mFlashState == FLASH_STATE_OFF){
+            Glide.with(getActivity())
+                    .load(R.drawable.ic_flash_off)
+                    .into(mFlashIcon);
+        }
+        else if(mFlashState == FLASH_STATE_ON){
+            Glide.with(getActivity())
+                    .load(R.drawable.ic_flash_on)
+                    .into(mFlashIcon);
+        }
+        else if(mFlashState == FLASH_STATE_AUTO){
+            Glide.with(getActivity())
+                    .load(R.drawable.ic_flash_auto)
+                    .into(mFlashIcon);
+        }
+        setAutoFlash(mPreviewRequestBuilder);
+    }
+
+
+    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
+        if (mFlashSupported) {
+            if(mFlashState == FLASH_STATE_OFF){
+                requestBuilder.set(CaptureRequest.FLASH_MODE,
+                        CaptureRequest.FLASH_MODE_OFF);
+            }
+            else if(mFlashState == FLASH_STATE_ON){
+                requestBuilder.set(CaptureRequest.FLASH_MODE,
+                        CaptureRequest.FLASH_MODE_SINGLE);
+            }
+            else if(mFlashState == FLASH_STATE_AUTO){
+                requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
             }
         }
     }
@@ -470,20 +536,20 @@ public class Camera2Fragment extends Fragment implements
             }
 
             case MotionEvent.ACTION_MOVE:{
-
                 break;
             }
         }
 
-        if(mIsImageAvailable){
-            Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
-            return mStillshotImageView.touchEvent(motionEvent);
-        }
-        else{
-            Log.d(TAG, "onTouch: ZOOM.");
-            return mTextureView.onTouch(motionEvent);
-        }
+//        if(mIsImageAvailable){
+//            Log.d(TAG, "onTouch: sending touch event to DrawableImageView");
+//            return mStillshotImageView.touchEvent(motionEvent);
+//        }
+//        else{
+//            Log.d(TAG, "onTouch: ZOOM.");
+//            return mTextureView.onTouch(motionEvent);
+//        }
 
+        return true;
     }
 
     private boolean mManualFocusEngaged = false;
@@ -832,6 +898,8 @@ public class Camera2Fragment extends Fragment implements
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
+            setAutoFlash(captureBuilder);
+
             // Orientation
             // Rotate the image from screen orientation to image orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -916,6 +984,9 @@ public class Camera2Fragment extends Fragment implements
             // Reset the auto-focus trigger
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+
+            setAutoFlash(mPreviewRequestBuilder);
+
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback, mBackgroundHandler);
             // After this, the camera will go back to the normal state of preview.
             mState = STATE_PREVIEW;
@@ -1000,6 +1071,8 @@ public class Camera2Fragment extends Fragment implements
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
+                                // Flash is automatically enabled when necessary.
+                                setAutoFlash(mPreviewRequestBuilder);
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
@@ -1227,6 +1300,10 @@ public class Camera2Fragment extends Fragment implements
 
 
             Log.d(TAG, "setUpCameraOutputs: cameraId: " + mCameraId);
+
+            // Check if the flash is supported.
+            Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+            mFlashSupported = available == null ? false : available;
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
