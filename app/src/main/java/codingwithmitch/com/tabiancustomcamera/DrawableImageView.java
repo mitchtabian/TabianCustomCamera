@@ -378,12 +378,12 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         }
     }
 
-
     public void reset() {
         for (Pen pen : mPenList) {
             pen.path.reset();
         }
         width = mMinWidth;
+        mStickers.clear();
         invalidate();
     }
 
