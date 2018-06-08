@@ -29,6 +29,8 @@ public class ScalingTextureView extends TextureView {
     public int mRatioHeight = 0;
     private int mScreenWidth = 0;
     private int mScreenHeight = 0;
+    private String mRoundedScreenAspectRatio = "";
+    private String mRoundedPreviewAspectRatio = "";
 
     private Matrix mMatrix;
 
@@ -36,7 +38,13 @@ public class ScalingTextureView extends TextureView {
 
     private MoveGestureDetector mMoveDetector;
 
+    // scaling
     public float mScaleFactor = 1.f;
+    public float mScaleFactorX = 1.f;
+    public float mScaleFactorY = 1.f;
+    public float mWidthCorrection = 0f;
+    float mScreenAspectRatio = 1f;
+    float mPreviewAspectRatio = 1f;
 
     public float mImageCenterX = 0.f;
 
@@ -82,6 +90,12 @@ public class ScalingTextureView extends TextureView {
         requestLayout();
         mScreenWidth = screenWidth;
         mScreenHeight = screenHeight;
+
+        mScreenAspectRatio = (float)mScreenHeight / (float)mScreenWidth;
+        mPreviewAspectRatio = (float)mRatioHeight / (float)mRatioWidth;
+        mRoundedScreenAspectRatio = String.format("%.2f", mScreenAspectRatio);
+        mRoundedPreviewAspectRatio = String.format("%.2f", mPreviewAspectRatio);
+        getWidthCorrection();
     }
 
     @Override
@@ -107,6 +121,19 @@ public class ScalingTextureView extends TextureView {
         mMoveDetector = new MoveGestureDetector(context, new MoveListener());
     }
 
+    private void getWidthCorrection(){
+        String roundedScreenAspectRatio = String.format("%.2f", mScreenAspectRatio);
+        String roundedPreviewAspectRatio = String.format("%.2f", mPreviewAspectRatio);
+        if(!roundedPreviewAspectRatio.equals(roundedScreenAspectRatio) ){
+
+            float scaleFactor = (mScreenAspectRatio / mPreviewAspectRatio);
+            Log.d(TAG, "configureTransform: scale factor: " + scaleFactor);
+
+            mWidthCorrection = (((float)mScreenWidth * scaleFactor) - mScreenWidth) / 2;
+            Log.d(TAG, "getWidthCorrection: width correction: " + mWidthCorrection);
+        }
+    }
+
 
     public boolean onTouch(MotionEvent motionEvent) {
 
@@ -120,13 +147,22 @@ public class ScalingTextureView extends TextureView {
 
             Log.d(TAG, "onTouch: scale factor: " + mScaleFactor);
 
-
-            float scaledImageCenterX = (getWidth() * mScaleFactor) / 2;
-
-            float scaledImageCenterY = (getHeight() * mScaleFactor) / 2;
+            mScaleFactorY = mScaleFactor;
+            mScaleFactorX = mScaleFactor;
 
 
-            mMatrix.postScale(mScaleFactor, mScaleFactor);
+            if(!mRoundedPreviewAspectRatio.equals(mRoundedScreenAspectRatio) ){
+
+                mScaleFactorX *= (mScreenAspectRatio / mPreviewAspectRatio);
+                Log.d(TAG, "configureTransform: scale factor: " + mScaleFactorX);
+            }
+
+            float scaledImageCenterX = (getWidth() * mScaleFactorX) / 2;
+
+            float scaledImageCenterY = (getHeight() * mScaleFactorY) / 2;
+
+
+            mMatrix.postScale(mScaleFactorX, mScaleFactorY);
 
             float dx = mImageCenterX - scaledImageCenterX;
 
@@ -136,18 +172,18 @@ public class ScalingTextureView extends TextureView {
 
 
             // BOUNDARY 1: Right
-            if (dx <  (getWidth() - ((float)mScreenWidth * mScaleFactor))) {
+            if (dx <  (getWidth() - (((float)mScreenWidth - mWidthCorrection) * mScaleFactorX))) {
 
-                dx = (getWidth() - ((float)mScreenWidth * mScaleFactor));
+                dx = (getWidth() - (((float)mScreenWidth - mWidthCorrection) * mScaleFactorX));
 
                 mImageCenterX = dx + scaledImageCenterX; // reverse the changes
 
             }
 
             //BOUNDARY 2: Bottom
-            if (dy <  (getHeight() - ((float)mScreenHeight * mScaleFactor))) {
+            if (dy <  (getHeight() - ((float)mScreenHeight * mScaleFactorY))) {
 
-                dy = (getHeight() - ((float)mScreenHeight * mScaleFactor));
+                dy = (getHeight() - ((float)mScreenHeight * mScaleFactorY));
 
                 mImageCenterY = dy + scaledImageCenterY;
 
@@ -155,9 +191,9 @@ public class ScalingTextureView extends TextureView {
 
 
             // BOUNDARY 3: Left
-            if (dx > 0) {
+            if (dx > -mWidthCorrection) {
 
-                dx = 0;
+                dx = -mWidthCorrection;
 
                 mImageCenterX = dx + scaledImageCenterX;
             }
@@ -215,6 +251,8 @@ public class ScalingTextureView extends TextureView {
 
     public void resetScale(){
         mScaleFactor = 1.0f;
+        mScaleFactorX = 1f;
+        mScaleFactorY = 1f;
         mImageCenterX = mRatioWidth / 2;
         mImageCenterX = mRatioHeight / 2;
     }
