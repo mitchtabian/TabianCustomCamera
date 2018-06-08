@@ -1,27 +1,21 @@
-package codingwithmitch.com.customcameratest;
+package codingwithmitch.com.tabiancustomcamera;
 
 import android.Manifest;
-import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.hardware.Camera;
-import android.os.Build;
-import android.support.annotation.MainThread;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-
-import java.io.File;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements IMainActivity{
 
@@ -35,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
 
     //vars
     private boolean mPermissions;
-    public String mCameraOrientation = "10"; // Front-facing or back-facing
+    public String mCameraOrientation = "none"; // Front-facing or back-facing
 
 
     @Override
@@ -43,44 +37,24 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setMaxAspectRatio();
         init();
     }
 
-    private void setMaxAspectRatio(){
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int width = displayMetrics.widthPixels;
-        int height = displayMetrics.heightPixels;
-
-        double aspectRatio = (double)height / (double)width;
-
-        Log.d(TAG, "setMaxAspectRatio: height: " + String.valueOf((double)height));
-        Log.d(TAG, "setMaxAspectRatio: width: " + String.valueOf((double)width));
-        Log.d(TAG, "setMaxAspectRatio: aspect ratio: " + aspectRatio);
-
-
-        // Standard 16/9 aspect ratio
-        if((aspectRatio * 9 > 15 && aspectRatio * 9 < 17)){
-            MAX_ASPECT_RATIO = "16/9";
-        }
-        // Small aspect ratio
-        else if(aspectRatio * 3 > 3 && aspectRatio * 3 < 5){
-            MAX_ASPECT_RATIO = "4/3";
-        }
-        else{
-            MAX_ASPECT_RATIO = "other"; // OR is for longer screens (ex Samsung s8)
-        }
-
-        Log.d(TAG, "setMaxAspectRatio: max aspect ratio: " + MAX_ASPECT_RATIO);
+    private void startCamera2(){
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.camera_container, Camera2Fragment.newInstance(), getString(R.string.fragment_camera2));
+        transaction.commit();
     }
 
     private void init(){
         if(mPermissions){
             if(checkCameraHardware(this)){
 
-                // ... CHECK SAVED INSTANCE STATE??
+                // Open the Camera
                 startCamera2();
+            }
+            else{
+                showSnackBar("You need a camera to use this application", Snackbar.LENGTH_INDEFINITE);
             }
         }
         else{
@@ -88,11 +62,142 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
         }
     }
 
-    private void startCamera2(){
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.camera_container, Camera2Fragment.newInstance(), getString(R.string.fragment_camera2))
-                .commit();
+    /** Check if this device has a camera */
+    private boolean checkCameraHardware(Context context) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
 
+    public void verifyPermissions(){
+        Log.d(TAG, "verifyPermissions: asking user for permissions.");
+        String[] permissions = {
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA};
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                permissions[0] ) == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                permissions[1] ) == PackageManager.PERMISSION_GRANTED) {
+            mPermissions = true;
+            init();
+        } else {
+            ActivityCompat.requestPermissions(
+                    MainActivity.this,
+                    permissions,
+                    REQUEST_CODE
+            );
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode == REQUEST_CODE){
+            if(mPermissions){
+                init();
+            }
+            else{
+                verifyPermissions();
+            }
+        }
+    }
+
+
+    private void showSnackBar(final String text, final int length) {
+        View view = this.findViewById(android.R.id.content).getRootView();
+        Snackbar.make(view, text, length).show();
+    }
+
+    @Override
+    public void setCameraFrontFacing() {
+        Log.d(TAG, "setCameraFrontFacing: setting camera to front facing.");
+        mCameraOrientation = CAMERA_POSITION_FRONT;
+    }
+
+    @Override
+    public void setCameraBackFacing() {
+        Log.d(TAG, "setCameraBackFacing: setting camera to back facing.");
+        mCameraOrientation = CAMERA_POSITION_BACK;
+    }
+
+    @Override
+    public void setFrontCameraId(String cameraId){
+        CAMERA_POSITION_FRONT = cameraId;
+    }
+
+
+    @Override
+    public void setBackCameraId(String cameraId){
+        CAMERA_POSITION_BACK = cameraId;
+    }
+
+    @Override
+    public boolean isCameraFrontFacing() {
+        if(mCameraOrientation.equals(CAMERA_POSITION_FRONT)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isCameraBackFacing() {
+        if(mCameraOrientation.equals(CAMERA_POSITION_BACK)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String getBackCameraId(){
+        return CAMERA_POSITION_BACK;
+    }
+
+    @Override
+    public String getFrontCameraId(){
+        return CAMERA_POSITION_FRONT;
+    }
+
+    @Override
+    public void hideStatusBar() {
+
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+    }
+
+    @Override
+    public void showStatusBar() {
+
+        View decorView = getWindow().getDecorView();
+        // Hide the status bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+    }
+
+    @Override
+    public void hideStillshotWidgets() {
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.drawingStarted();
+            }
+        }
+    }
+
+    @Override
+    public void showStillshotWidgets() {
+        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
+        if (camera2Fragment != null) {
+            if(camera2Fragment.isVisible()){
+                camera2Fragment.drawingStopped();
+            }
+        }
     }
 
     @Override
@@ -144,99 +249,21 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
     }
 
     @Override
-    public void onBackPressed() {
-
-        ViewStickersFragment viewStickersFragment
-                = (ViewStickersFragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_view_stickers));
-        if (viewStickersFragment != null) {
-            if(viewStickersFragment.isVisible()){
-                hideViewStickersFragment(viewStickersFragment);
-            }
-            else{
-                super.onBackPressed();
-            }
-        }
-        else{
-            super.onBackPressed();
-        }
-    }
-
-    /** Check if this device has a camera */
-    private boolean checkCameraHardware(Context context) {
-        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
-            // this device has a camera
-            return true;
-        } else {
-            // no camera on this device
-            return false;
-        }
-    }
-
-
-    /**
-     * Generalized method for asking permission. Can pass any array of permissions
-     */
-    public void verifyPermissions(){
-        Log.d(TAG, "verifyPermissions: asking user for permissions.");
-        String[] permissions = {
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA};
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                permissions[0] ) == PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                permissions[1] ) == PackageManager.PERMISSION_GRANTED) {
-            mPermissions = true;
-            init();
-        } else {
-            ActivityCompat.requestPermissions(
-                    MainActivity.this,
-                    permissions,
-                    REQUEST_CODE
-            );
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        Log.d(TAG, "onRequestPermissionsResult: called.");
-
-        if(requestCode == REQUEST_CODE){
-            Log.d(TAG, "onRequestPermissionsResult: request code detected.");
-            if(mPermissions){
-                Log.d(TAG, "onRequestPermissionsResult: storage permission is granted.");
-                init();
-            }
-            else{
-                verifyPermissions();
-            }
-        }
-    }
-
-    @Override
-    public String getMaxAspectRatio(){
-        return MAX_ASPECT_RATIO;
-    }
-
-    @Override
-    public void hideStillshotWidgets() {
+    public void addSticker(Drawable sticker){
         Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
         if (camera2Fragment != null) {
             if(camera2Fragment.isVisible()){
-//                Log.d(TAG, "drawingStarted: started drawing.");
-                camera2Fragment.drawingStarted();
+                camera2Fragment.addSticker(sticker);
             }
         }
     }
 
     @Override
-    public void showStillshotWidgets() {
+    public void setTrashIconSize(int width, int height){
         Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
         if (camera2Fragment != null) {
             if(camera2Fragment.isVisible()){
-//                Log.d(TAG, "drawingStopped: stopped drawing.");
-                camera2Fragment.drawingStopped();
+                camera2Fragment.setTrashIconSize(width, height);
             }
         }
     }
@@ -258,97 +285,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivity{
             }
         }
     }
-
-    @Override
-    public void onCloseViewStillshot() {
-        startCamera2();
-    }
-
-    @Override
-    public void hideStatusBar() {
-
-        View decorView = getWindow().getDecorView();
-        // Hide the status bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
-    }
-
-    @Override
-    public void showStatusBar() {
-
-        View decorView = getWindow().getDecorView();
-        // Hide the status bar.
-        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
-    }
-
-    @Override
-    public void setCameraFrontFacing() {
-        mCameraOrientation = CAMERA_POSITION_FRONT;
-    }
-
-    @Override
-    public void setFrontCameraId(String cameraId){
-        CAMERA_POSITION_FRONT = cameraId;
-    }
-
-
-    @Override
-    public void setCameraBackFacing() {
-        mCameraOrientation = CAMERA_POSITION_BACK;
-    }
-
-    @Override
-    public void setBackCameraId(String cameraId){
-        CAMERA_POSITION_BACK = cameraId;
-    }
-
-    @Override
-    public String getBackCameraId(){
-        return CAMERA_POSITION_BACK;
-    }
-
-    @Override
-    public String getFrontCameraId(){
-        return CAMERA_POSITION_FRONT;
-    }
-
-    @Override
-    public boolean isCameraFrontFacing() {
-        if(mCameraOrientation.equals(CAMERA_POSITION_FRONT)){
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isCameraBackFacing() {
-        if(mCameraOrientation.equals(CAMERA_POSITION_BACK)){
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void addSticker(Drawable sticker){
-        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
-        if (camera2Fragment != null) {
-            if(camera2Fragment.isVisible()){
-                camera2Fragment.addSticker(sticker);
-            }
-        }
-    }
-
-    @Override
-    public void setTrashIconSize(int width, int height){
-        Camera2Fragment camera2Fragment = (Camera2Fragment) getSupportFragmentManager().findFragmentByTag(getString(R.string.fragment_camera2));
-        if (camera2Fragment != null) {
-            if(camera2Fragment.isVisible()){
-                camera2Fragment.setTrashIconSize(width, height);
-            }
-        }
-    }
-
 }
 
 

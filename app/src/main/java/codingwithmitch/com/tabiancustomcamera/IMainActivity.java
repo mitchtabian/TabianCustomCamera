@@ -3,24 +3,18 @@ package codingwithmitch.com.tabiancustomcamera;
 import android.graphics.drawable.Drawable;
 
 /**
- * Created by User on 5/22/2018.
+ * Created by User on 6/5/2018.
  */
 
 public interface IMainActivity {
 
-    void hideStillshotWidgets();
-
-    void showStillshotWidgets();
-
-    void onCloseViewStillshot();
-
-    void hideStatusBar();
-
-    void showStatusBar();
-
     void setCameraFrontFacing();
 
     void setCameraBackFacing();
+
+    boolean isCameraFrontFacing();
+
+    boolean isCameraBackFacing();
 
     void setFrontCameraId(String cameraId);
 
@@ -30,11 +24,13 @@ public interface IMainActivity {
 
     String getBackCameraId();
 
-    boolean isCameraFrontFacing();
+    void hideStatusBar();
 
-    boolean isCameraBackFacing();
+    void showStatusBar();
 
-    String getMaxAspectRatio();
+    void hideStillshotWidgets();
+
+    void showStillshotWidgets();
 
     void toggleViewStickersFragment();
 

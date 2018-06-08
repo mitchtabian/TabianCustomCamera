@@ -1,4 +1,4 @@
-package codingwithmitch.com.tabiancustomcamera;
+package codingwithmitch.com.tabiancustomcamera.gestures;
 
 import android.content.Context;
 import android.graphics.PointF;

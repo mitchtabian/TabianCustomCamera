@@ -27,30 +27,31 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 {
 
     private static final String TAG = "DrawableImageView";
+
     private static final int SIZE_CHANGE_SPEED = 2;
     private static final int STICKER_STARTING_WIDTH = 300;
     private static final int STICKER_STARTING_HEIGHT = 300;
     private static final int MIN_STICKER_WIDTH = 50;
     private static final int MIN_STICKER_HEIGHT = 50;
-    private static final int STICKER_RESIZE_RATE = 15;
     private static final int TRASH_ICON_ENLARGED_SIZE = 55;
     private static final int TRASH_ICON_NORMAL_SIZE = 44;
 
-
-
+    //vars
     private int color;
     private float width = 8f;
-    private List<Holder> holderList = new ArrayList<Holder>();
-    private Circle mCircle;
+    private List<Pen> mPenList = new ArrayList<Pen>();
     private Activity mHostActivity;
-    private ScaleGestureDetector mScaleGestureDetector;
-    private boolean mIsSizeChanging = false;
-    private int mScreenWidth;
     private boolean mIsDrawingEnabled = false;
+
 
     // Scales
     float mMinWidth = 8f;
     float mMaxWidth = 500f;
+    private ScaleGestureDetector mScaleGestureDetector;
+    private boolean mIsSizeChanging = false;
+    private Circle mCircle;
+    private int mScreenWidth;
+
 
     // Stickers
     private ArrayList<Sticker> mStickers = new ArrayList<>();
@@ -60,41 +61,6 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
     // Trash can location
     Rect trashRect;
-
-
-    private class Circle {
-
-        float x, y;
-        Paint paint;
-
-        Circle(int color, float x, float y) {
-            this.x = x;
-            this.y = y;
-            paint = new Paint();
-            paint.setAntiAlias(true);
-            paint.setStrokeWidth(width);
-            paint.setColor(color);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeJoin(Paint.Join.ROUND);
-            paint.setStrokeCap(Paint.Cap.ROUND);
-        }
-    }
-
-    private class Holder {
-        Path path;
-        Paint paint;
-
-        Holder(int color, float width ) {
-            path = new Path();
-            paint = new Paint();
-            paint.setAntiAlias(true);
-            paint.setStrokeWidth(width);
-            paint.setColor(color);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeJoin(Paint.Join.ROUND);
-            paint.setStrokeCap(Paint.Cap.ROUND);
-        }
-    }
 
     private class Sticker{
 
@@ -120,15 +86,43 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             rect.right = x + bitmap.getWidth();
             rect.bottom = y + bitmap.getHeight();
         }
-
-        public void rectPositionResize(int delta){
-            rect.left += delta;
-            rect.top += delta;
-            rect.right += delta;
-            rect.bottom += delta;
-        }
-
     }
+
+
+    private class Circle {
+
+        float x, y;
+        Paint paint;
+
+        Circle(int color, float x, float y) {
+            this.x = x;
+            this.y = y;
+            paint = new Paint();
+            paint.setAntiAlias(true);
+            paint.setStrokeWidth(width);
+            paint.setColor(color);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeJoin(Paint.Join.ROUND);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+        }
+    }
+
+    private class Pen {
+        Path path;
+        Paint paint;
+
+        Pen(int color, float width ) {
+            path = new Path();
+            paint = new Paint();
+            paint.setAntiAlias(true);
+            paint.setStrokeWidth(width);
+            paint.setColor(color);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeJoin(Paint.Join.ROUND);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+        }
+    }
+
 
 
     public DrawableImageView(Context context) {
@@ -149,15 +143,17 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
     }
 
     private void init(Context context) {
-        holderList.add(new Holder(color, width));
+        mPenList.add(new Pen(color, width));
         setDrawingCacheEnabled(true);
         if(context instanceof Activity) {
             mHostActivity = (Activity) context;
+
             mScaleGestureDetector = new ScaleGestureDetector(mHostActivity, new ScaleListener());
 
             DisplayMetrics displayMetrics = new DisplayMetrics();
             mHostActivity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             mScreenWidth = displayMetrics.widthPixels;
+
             int screenHeight = displayMetrics.heightPixels;
 
             float density = displayMetrics.density;
@@ -183,21 +179,18 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             }
         }
 
-        for (Holder holder : holderList) {
-            canvas.drawPath(holder.path, holder.paint);
+        for (Pen pen : mPenList) {
+            canvas.drawPath(pen.path, pen.paint);
         }
 
         if(mCircle != null){
             float radius = width / (float)mScreenWidth;
             canvas.drawCircle(mCircle.x, mCircle.y, radius, mCircle.paint);
         }
-
     }
 
 
     public boolean touchEvent(MotionEvent event){
-
-        //        Log.d(TAG, "touchEvent: pointer count: " + event.getPointerCount());
 
         hideStatusBar();
 
@@ -209,15 +202,14 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
             }
         }
 
+        if(mIsDrawingEnabled) {
+            if (event.getPointerCount() > 1) {
 
-        if(mIsDrawingEnabled){
-            if(event.getPointerCount() > 1){
-
-                if(!mIsSizeChanging){
+                if (!mIsSizeChanging) {
                     mIsSizeChanging = true;
                 }
 
-                try{
+                try {
                     mScaleGestureDetector.onTouchEvent(event);
 
                     float[] xPositions = new float[2];
@@ -225,23 +217,22 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                     float minX = 0;
                     float minY = 0;
 
-                    for(int i = 0; i < event.getPointerCount(); i++){
+                    for (int i = 0; i < event.getPointerCount(); i++) {
                         int pointerId = event.getPointerId(i);
-                        if(pointerId == MotionEvent.INVALID_POINTER_ID){
+                        if (pointerId == MotionEvent.INVALID_POINTER_ID) {
                             continue;
                         }
 
-                        if(minX == 0 && minY == 0){
+                        if (minX == 0 && minY == 0) {
                             minX = event.getX(i);
                             minY = event.getY(i);
-                        }
-                        else{
+                        } else {
                             float tempMinX = event.getX(i);
                             float tempMinY = event.getY(i);
-                            if(tempMinX < minX){
+                            if (tempMinX < minX) {
                                 minX = tempMinX;
                             }
-                            if(tempMinY < minY){
+                            if (tempMinY < minY) {
                                 minY = tempMinY;
                             }
                         }
@@ -256,25 +247,24 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
                     mCircle = new Circle(color, circleX, circleY);
 
-                }catch (IndexOutOfBoundsException e){
-                    Log.e(TAG, "touchEvent: IndexOutOfBoundsException: " + e.getMessage() );
+                } catch (IndexOutOfBoundsException e) {
+                    Log.e(TAG, "touchEvent: IndexOutOfBoundsException: " + e.getMessage());
                 }
-            }
-            else {
+            } else {
 
-                if(!mIsSizeChanging) {
+                if (!mIsSizeChanging) {
 
                     float eventX = event.getX();
                     float eventY = event.getY();
 
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
-                            holderList.add(new Holder(color, width));
-                            holderList.get(holderList.size() - 1).path.moveTo(eventX, eventY);
+                            mPenList.add(new Pen(color, width));
+                            mPenList.get(mPenList.size() - 1).path.moveTo(eventX, eventY);
                             return true;
                         case MotionEvent.ACTION_MOVE:
-                            holderList.get(holderList.size() - 1).path.lineTo(eventX, eventY);
                             drawingStarted();
+                            mPenList.get(mPenList.size() - 1).path.lineTo(eventX, eventY);
                             break;
                         case MotionEvent.ACTION_UP:
                             drawingStopped();
@@ -319,7 +309,7 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                         else{
                             mIsStickerResizing = false;
 
-                           moveSticker(newPositionX, newPositionY);
+                            moveSticker(newPositionX, newPositionY);
 
                             if(trashRect.contains(newPositionX, newPositionY)){
                                 enlargeTrashIcon();
@@ -353,7 +343,6 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                             break; // break the loop
                         }
                     }
-                    shrinkTrashIcon();
                     break;
                 }
 
@@ -361,9 +350,44 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
 
         }
 
-
         invalidate();
         return true;
+    }
+
+    private void dragStickerStarted(){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                ((MainActivity)mHostActivity).dragStickerStarted();
+            }
+        }
+    }
+
+    private void dragStickerStopped(){
+        if(mHostActivity != null){
+            if(mHostActivity instanceof MainActivity){
+                ((MainActivity)mHostActivity).dragStickerStopped();
+            }
+        }
+        removeCircle();
+    }
+
+    public void removeSticker(){
+        if(mSelectedStickerIndex != -1){
+            mStickers.remove(mSelectedStickerIndex);
+            invalidate();
+        }
+    }
+
+    public void enlargeTrashIcon(){
+        if(mHostActivity instanceof MainActivity){
+            ((MainActivity)mHostActivity).setTrashIconSize(TRASH_ICON_ENLARGED_SIZE, TRASH_ICON_ENLARGED_SIZE);
+        }
+    }
+
+    public void shrinkTrashIcon(){
+        if(mHostActivity instanceof MainActivity){
+            ((MainActivity)mHostActivity).setTrashIconSize(TRASH_ICON_NORMAL_SIZE, TRASH_ICON_NORMAL_SIZE);
+        }
     }
 
     private void resetSticker(int newPositionX, int newPositionY){
@@ -395,79 +419,18 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         mStickers.get(mSelectedStickerIndex).adjustRect();
     }
 
-    public void removeSticker(){
-        if(mSelectedStickerIndex != -1){
-            mStickers.remove(mSelectedStickerIndex);
-            invalidate();
-        }
-    }
 
-    public void enlargeTrashIcon(){
-        if(mHostActivity instanceof MainActivity){
-            ((MainActivity)mHostActivity).setTrashIconSize(TRASH_ICON_ENLARGED_SIZE, TRASH_ICON_ENLARGED_SIZE);
-        }
-    }
-
-    public void shrinkTrashIcon(){
-        if(mHostActivity instanceof MainActivity){
-            ((MainActivity)mHostActivity).setTrashIconSize(TRASH_ICON_NORMAL_SIZE, TRASH_ICON_NORMAL_SIZE);
-        }
-    }
-
-    public void removeLastPath(){
-        if(holderList.size() > 0){
-            holderList.remove(holderList.size() - 1);
-            invalidate();
-        }
-    }
-
-
-    public void reset() {
-        for (Holder holder : holderList) {
-            holder.path.reset();
-        }
-        mStickers.clear();
-        invalidate();
-    }
-
-    public void setBrushColor(int color) {
-        this.color = color;
-    }
-
-    public int getBrushColor(){
-        return color;
-    }
-
-    public void setWidth(float width) {
-        this.width = width;
-    }
-
-    private void dragStickerStarted(){
+    public void addNewSticker(Drawable drawable){
         if(mHostActivity != null){
             if(mHostActivity instanceof MainActivity){
-                ((MainActivity)mHostActivity).dragStickerStarted();
+                Log.d(TAG, "addNewSticker: adding new sticker to canvas.");
+                Bitmap newStickerBitmap = drawableToBitmap(drawable);
+
+                Sticker sticker = new Sticker(newStickerBitmap, drawable,0, 200);
+                mStickers.add(sticker);
+                invalidate();
             }
         }
-    }
-
-    private void dragStickerStopped(){
-        if(mHostActivity != null){
-            if(mHostActivity instanceof MainActivity){
-                ((MainActivity)mHostActivity).dragStickerStopped();
-            }
-        }
-        removeCircle();
-    }
-
-    private void hideStatusBar() {
-
-        if(mHostActivity != null){
-            View decorView = mHostActivity.getWindow().getDecorView();
-            // Hide the status bar.
-            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
-        }
-
     }
 
     private void drawingStarted(){
@@ -487,12 +450,53 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         removeCircle();
     }
 
-    public void setDrawingIsEnabled(boolean bool){
-        mIsDrawingEnabled = bool;
-    }
-
     private void removeCircle(){
         mCircle = null;
+    }
+
+    public void removeLastPath(){
+        if(mPenList.size() > 0){
+            mPenList.remove(mPenList.size() - 1);
+            invalidate();
+        }
+    }
+
+
+    public void reset() {
+        for (Pen pen : mPenList) {
+            pen.path.reset();
+        }
+        width = mMinWidth;
+        invalidate();
+    }
+
+    public void setBrushColor(int color) {
+        this.color = color;
+    }
+
+    public int getBrushColor(){
+        return color;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+
+    private void hideStatusBar() {
+
+        if(mHostActivity != null){
+            View decorView = mHostActivity.getWindow().getDecorView();
+            // Hide the status bar.
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
+        }
+
+    }
+
+
+    public void setDrawingIsEnabled(boolean bool){
+        mIsDrawingEnabled = bool;
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -506,8 +510,8 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
         public boolean onScale(ScaleGestureDetector detector) {
             float scaleFactor = detector.getScaleFactor();
 
-
             if(scaleFactor > 1.011 || scaleFactor < 0.99) {
+
                 if(mSelectedStickerIndex != -1){
                     mStickers.get(mSelectedStickerIndex).bitmap
                             = resizeBitmap(
@@ -534,23 +538,11 @@ public class DrawableImageView extends android.support.v7.widget.AppCompatImageV
                         width = prevWidth;
                     }
                 }
+
             }
 
 
             return true;
-        }
-    }
-
-    public void addNewSticker(Drawable drawable){
-        if(mHostActivity != null){
-            if(mHostActivity instanceof MainActivity){
-                Log.d(TAG, "addNewSticker: adding new sticker to canvas.");
-                Bitmap newStickerBitmap = drawableToBitmap(drawable);
-
-                Sticker sticker = new Sticker(newStickerBitmap, drawable,0, 200);
-                mStickers.add(sticker);
-                invalidate();
-            }
         }
     }
 

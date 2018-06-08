@@ -29,11 +29,11 @@ public class ViewStickersFragment extends Fragment implements
 
     //widgets
     private RecyclerView mRecyclerView;
-    private StickerAdapter mStickerAdapter;
 
     //vars
     private ArrayList<Drawable> mStickers = new ArrayList<>();
     private IMainActivity mIMainActivity;
+    private StickerAdapter mStickerAdapter;
 
     public static ViewStickersFragment newInstance() {
         return new ViewStickersFragment();

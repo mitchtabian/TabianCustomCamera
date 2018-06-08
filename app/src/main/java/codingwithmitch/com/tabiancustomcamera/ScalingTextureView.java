@@ -16,22 +16,35 @@ import android.view.ScaleGestureDetector;
 import android.view.TextureView;
 import android.view.View;
 
+import codingwithmitch.com.tabiancustomcamera.gestures.MoveGestureDetector;
+
 /**
  * A {@link TextureView} that can be adjusted to a specified aspect ratio.
  */
-public class ScalingTextureView extends TextureView implements View.OnTouchListener{
+public class ScalingTextureView extends TextureView {
 
     private static final String TAG = "ScalingTextureView";
 
-    private int mRatioWidth = 0;
-    private int mRatioHeight = 0;
+    public int mRatioWidth = 0;
+    public int mRatioHeight = 0;
+    private int mScreenWidth = 0;
+    private int mScreenHeight = 0;
+    private String mRoundedScreenAspectRatio = "";
+    private String mRoundedPreviewAspectRatio = "";
+
     private Matrix mMatrix;
 
     private ScaleGestureDetector mScaleDetector;
 
     private MoveGestureDetector mMoveDetector;
 
+    // scaling
     public float mScaleFactor = 1.f;
+    public float mScaleFactorX = 1.f;
+    public float mScaleFactorY = 1.f;
+    public float mWidthCorrection = 0f;
+    float mScreenAspectRatio = 1f;
+    float mPreviewAspectRatio = 1f;
 
     public float mImageCenterX = 0.f;
 
@@ -71,13 +84,21 @@ public class ScalingTextureView extends TextureView implements View.OnTouchListe
      * @param width  Relative horizontal size
      * @param height Relative vertical size
      */
-    public void setAspectRatio(int width, int height) {
+    public void setAspectRatio(int width, int height, int screenWidth, int screenHeight) {
         if (width < 0 || height < 0) {
             throw new IllegalArgumentException("Size cannot be negative.");
         }
         mRatioWidth = width;
         mRatioHeight = height;
         requestLayout();
+        mScreenWidth = screenWidth;
+        mScreenHeight = screenHeight;
+
+        mScreenAspectRatio = (float)mScreenHeight / (float)mScreenWidth;
+        mPreviewAspectRatio = (float)mRatioHeight / (float)mRatioWidth;
+        mRoundedScreenAspectRatio = String.format("%.2f", mScreenAspectRatio);
+        mRoundedPreviewAspectRatio = String.format("%.2f", mPreviewAspectRatio);
+        getWidthCorrection();
     }
 
     @Override
@@ -87,14 +108,11 @@ public class ScalingTextureView extends TextureView implements View.OnTouchListe
         int height = MeasureSpec.getSize(heightMeasureSpec);
         if (0 == mRatioWidth || 0 == mRatioHeight) {
             setMeasuredDimension(width, height);
-        } else {
-            if (width < height * mRatioWidth / mRatioHeight) {
-                setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
-            } else {
-                setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
-            }
         }
+        setMeasuredDimension(mScreenWidth, mScreenHeight);
+
     }
+
 
     private void init(Context context) {
 
@@ -106,98 +124,105 @@ public class ScalingTextureView extends TextureView implements View.OnTouchListe
         mMoveDetector = new MoveGestureDetector(context, new MoveListener());
     }
 
-    public void setDisplayMetrics(int width, int height) {
+    private void getWidthCorrection(){
+        String roundedScreenAspectRatio = String.format("%.2f", mScreenAspectRatio);
+        String roundedPreviewAspectRatio = String.format("%.2f", mPreviewAspectRatio);
+        if(!roundedPreviewAspectRatio.equals(roundedScreenAspectRatio) ){
 
-        mImageCenterX = width / 2;
+            float scaleFactor = (mScreenAspectRatio / mPreviewAspectRatio);
+            Log.d(TAG, "configureTransform: scale factor: " + scaleFactor);
 
-        mImageCenterY = height / 2;
+            mWidthCorrection = (((float)mScreenWidth * scaleFactor) - mScreenWidth) / 2;
+            Log.d(TAG, "getWidthCorrection: width correction: " + mWidthCorrection);
+        }
     }
 
 
-
-    @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
+    public boolean onTouch(MotionEvent motionEvent) {
 
         mScaleDetector.onTouchEvent(motionEvent);
 
         mMoveDetector.onTouchEvent(motionEvent);
 
-        Log.d(TAG, "onTouch: scale factor: " + mScaleFactor);
+        if(mScaleFactor > 1.011111 || mScaleFactor < 0.99999) {
 
-        float screenAspectRatio = (float)mRatioHeight / (float)mRatioWidth;
-        float scaleFactorX = mScaleFactor;
-        float scaleFactorY = mScaleFactor;
+            mMatrix.reset();
 
-        Log.d(TAG, "onTouch: screen aspect ratio: " + screenAspectRatio);
+            Log.d(TAG, "onTouch: scale factor: " + mScaleFactor);
 
-        // Probably larger (ex: samsung s8 has 1.92)
-        if(screenAspectRatio > 1.9f && screenAspectRatio < 2.0f){
+            mScaleFactorY = mScaleFactor;
+            mScaleFactorX = mScaleFactor;
 
-            // find adjustment factor based on target aspect ratio and actual aspect ratio
-            float targetAspectRatio = (float)16 / (float)9;
-            float adjustmentFactor = ( (float)mRatioHeight - ((float)mRatioWidth * targetAspectRatio) ) / (float)mRatioHeight;
-            Log.d(TAG, "onTouch: width scale adjustment factor: " + adjustmentFactor);
 
-            scaleFactorX = scaleFactorX + (scaleFactorX * adjustmentFactor);
-            Log.d(TAG, "onTouch: adjusting x-scale because screen size is weird.");
+            if(!mRoundedPreviewAspectRatio.equals(mRoundedScreenAspectRatio) ){
+
+                mScaleFactorX *= (mScreenAspectRatio / mPreviewAspectRatio);
+                Log.d(TAG, "configureTransform: scale factor: " + mScaleFactorX);
+            }
+
+            float scaledImageCenterX = (getWidth() * mScaleFactorX) / 2;
+
+            float scaledImageCenterY = (getHeight() * mScaleFactorY) / 2;
+
+
+            mMatrix.postScale(mScaleFactorX, mScaleFactorY);
+
+            float dx = mImageCenterX - scaledImageCenterX;
+
+            float dy = mImageCenterY - scaledImageCenterY;
+
+            Log.d(TAG, "onTouch: dx: " + dx + ", dy: " + dy);
+
+
+            // BOUNDARY 1: Right
+            if (dx <  (getWidth() - (((float)mScreenWidth - mWidthCorrection) * mScaleFactorX))) {
+
+                dx = (getWidth() - (((float)mScreenWidth - mWidthCorrection) * mScaleFactorX));
+
+                mImageCenterX = dx + scaledImageCenterX; // reverse the changes
+
+            }
+
+            //BOUNDARY 2: Bottom
+            if (dy <  (getHeight() - ((float)mScreenHeight * mScaleFactorY))) {
+
+                dy = (getHeight() - ((float)mScreenHeight * mScaleFactorY));
+
+                mImageCenterY = dy + scaledImageCenterY;
+
+            }
+
+
+            // BOUNDARY 3: Left
+            if (dx > -mWidthCorrection) {
+
+                dx = -mWidthCorrection;
+
+                mImageCenterX = dx + scaledImageCenterX;
+            }
+
+
+            // BOUNDARY 4: Top
+            if (dy > 0) {
+
+                dy = 0;
+
+                mImageCenterY = dy + scaledImageCenterY;
+            }
+
+            mMatrix.postTranslate(dx, dy);
+
+            setTransform(mMatrix);
+
+            setAlpha(1);
+
+            mFocusX = -1 * (dx / mScaleFactorX);
+            mFocusY = -1 * (dy / mScaleFactorY);
         }
-
-
-        float scaledImageCenterX = (getWidth() * scaleFactorX) / 2;
-
-        float scaledImageCenterY = (getHeight() * scaleFactorY) / 2;
-
-        mMatrix.reset();
-
-        mMatrix.postScale(scaleFactorX, scaleFactorY);
-
-        float dx = mImageCenterX - scaledImageCenterX;
-
-        float dy = mImageCenterY - scaledImageCenterY;
-
-        if (dx < ((1 - mScaleFactor) * getWidth())) {
-
-            dx = (1 - mScaleFactor) * getWidth();
-
-            mImageCenterX = dx + scaledImageCenterX;
-
-        }
-
-        if (dy < ((1 - mScaleFactor) * getHeight())) {
-
-            dy = (1 - mScaleFactor) * getHeight();
-
-            mImageCenterY = dy + scaledImageCenterY;
-
-        }
-        if (dx > 0) {
-
-            dx = 0;
-
-            mImageCenterX = dx + scaledImageCenterX;
-        }
-
-        if (dy > 0) {
-
-            dy = 0;
-
-            mImageCenterY = dy + scaledImageCenterY;
-        }
-
-        mMatrix.postTranslate(dx, dy);
-
-        setTransform(mMatrix);
-
-        setAlpha(1);
-
-        mFocusX = -1 * (dx / mScaleFactor);
-        mFocusY = -1 * (dy / mScaleFactor);
-        Log.d(TAG, "onTouch: mFocusX: " + mFocusX);
-        Log.d(TAG, "onTouch: mFocusY: " + mFocusY);
-
-
         return true; // indicate event was handled
+
     }
+
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
@@ -222,14 +247,19 @@ public class ScalingTextureView extends TextureView implements View.OnTouchListe
 
             mImageCenterY += d.y;
 
+            Log.d(TAG, "onMove: image center x: " + mImageCenterX);
+            Log.d(TAG, "onMove: image canter y: " + mImageCenterY);
+
             return true;
         }
     }
 
     public void resetScale(){
         mScaleFactor = 1.0f;
-        mImageCenterX = 1.0f;
-        mImageCenterX = 1.0f;
+        mScaleFactorX = 1f;
+        mScaleFactorY = 1f;
+        mImageCenterX = mRatioWidth / 2;
+        mImageCenterX = mRatioHeight / 2;
         mFocusX = 0f;
         mFocusY = 0f;
     }

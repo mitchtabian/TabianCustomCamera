@@ -16,6 +16,34 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"/>
 
+
+    <!-- Flash Toggle -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:layout_marginEnd="@dimen/cam_widget_margin_top_sides"
+        android:layout_marginTop="@dimen/cam_widget_margin_top"
+        android:layout_marginRight="@dimen/cam_widget_margin_top_sides"
+        android:background="@drawable/circle_white"
+        android:id="@+id/flash_container"
+        android:layout_toLeftOf="@+id/switch_orientation_container">
+
+        <ImageButton
+            android:id="@+id/flash_toggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/cam_circle_selector"
+            android:padding="@dimen/cam_content_inset_secondary"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_flash_off"
+            tools:ignore="ContentDescription"
+            />
+
+    </RelativeLayout>
+
+
+    <!-- Switch Orientation Button -->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -50,31 +78,8 @@
 
     </RelativeLayout>
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="1dp"
-        android:layout_marginEnd="@dimen/cam_widget_margin_top_sides"
-        android:layout_marginTop="@dimen/cam_widget_margin_top"
-        android:layout_marginRight="@dimen/cam_widget_margin_top_sides"
-        android:background="@drawable/circle_white"
-        android:id="@+id/flash_container"
-        android:layout_toLeftOf="@+id/switch_orientation_container">
 
-        <ImageButton
-            android:id="@+id/flash_toggle"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/cam_circle_selector"
-            android:padding="@dimen/cam_content_inset_secondary"
-            android:scaleType="fitXY"
-            android:src="@drawable/ic_flash_off"
-            tools:ignore="ContentDescription"
-            />
-
-    </RelativeLayout>
-
-
+    <!-- Capture Stillshot Button -->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -108,10 +113,7 @@
 
         </RelativeLayout>
 
-
-
     </RelativeLayout>
-
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -147,8 +149,7 @@
 
         </RelativeLayout>
 
-
-
+        <!-- Pen Container -->
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -175,6 +176,7 @@
 
         </RelativeLayout>
 
+        <!-- Sticker Container -->
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -203,6 +205,7 @@
         </RelativeLayout>
 
 
+        <!-- Undo Button -->
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -237,7 +240,6 @@
 
         </RelativeLayout>
 
-
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -261,7 +263,6 @@
                 android:layout_centerHorizontal="true"/>
 
         </RelativeLayout>
-
 
         <RelativeLayout
             android:layout_width="wrap_content"
@@ -294,6 +295,7 @@
             </RelativeLayout>
 
         </RelativeLayout>
+
 
         <RelativeLayout
             android:layout_width="wrap_content"
@@ -330,8 +332,6 @@
 
         </RelativeLayout>
 
-
     </RelativeLayout>
-
 
 </RelativeLayout>

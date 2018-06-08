@@ -14,9 +14,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-/**
- * Created by Mark on 11/08/2016.
- */
 
 public class VerticalSlideColorPicker extends View {
 
