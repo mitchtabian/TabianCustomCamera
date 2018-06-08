@@ -1263,10 +1263,6 @@ public class Camera2Fragment extends Fragment implements
                 @Override
                 public void run() {
 
-                    mStillshotImageView.reset();
-                    mStillshotImageView.setDrawingCacheEnabled(true);
-                    mStillshotImageView.buildDrawingCache();
-
                     RequestOptions options = new RequestOptions()
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
                             .skipMemoryCache(true)
@@ -1322,8 +1318,6 @@ public class Camera2Fragment extends Fragment implements
                             .setDefaultRequestOptions(options)
                             .load(background)
                             .into(mStillshotImageView);
-
-
 
                     showStillshotContainer();
                 }
