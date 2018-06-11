@@ -48,6 +48,10 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -125,6 +129,10 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
 
     /** A {@link Handler} for running tasks in the background. */
     private Handler mBackgroundHandler;
+
+    private Image mCapturedImage;
+
+    private boolean mIsImageAvailable = false;
 
     /**
      * An {@link ImageReader} that handles still image capture.
@@ -416,8 +424,14 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         public void onImageAvailable(ImageReader reader) {
             Log.d(TAG, "onImageAvailable: called.");
 
-            Image image = reader.acquireNextImage();
-            Log.d(TAG, "onImageAvailable: got the image: " + image.getTimestamp());
+            if(!mIsImageAvailable){
+                mCapturedImage = reader.acquireLatestImage();
+
+                Log.d(TAG, "onImageAvailable: captured image width: " + mCapturedImage.getWidth());
+                Log.d(TAG, "onImageAvailable: captured image height: " + mCapturedImage.getHeight());
+
+                saveTempImageToStorage();
+            }
         }
     };
     /**
@@ -846,6 +860,82 @@ public class Camera2Fragment extends Fragment implements View.OnClickListener {
         }
     }
 
+
+    private void saveTempImageToStorage(){
+
+        Log.d(TAG, "saveTempImageToStorage: saving temp image to disk.");
+        final ICallback callback = new ICallback() {
+            @Override
+            public void done(Exception e) {
+                if(e == null){
+                    Log.d(TAG, "onImageSavedCallback: image saved!");
+
+                    mIsImageAvailable = true;
+                }
+                else{
+                    Log.d(TAG, "onImageSavedCallback: error saving image: " + e.getMessage());
+                    showSnackBar("Error displaying image", Snackbar.LENGTH_SHORT);
+                }
+            }
+        };
+
+        ImageSaver imageSaver = new ImageSaver(
+                mCapturedImage,
+                getActivity().getExternalFilesDir(null),
+                callback
+        );
+        mBackgroundHandler.post(imageSaver);
+    }
+
+
+    /**
+     * Saves a JPEG {@link Image} into the specified {@link File}.
+     */
+    private static class ImageSaver implements Runnable {
+
+        /** The file we save the image into. */
+        private final File mFile;
+
+        /** Original image that was captured */
+        private Image mImage;
+
+        private ICallback mCallback;
+
+        ImageSaver(Image image, File file, ICallback callback) {
+            mImage = image;
+            mFile = file;
+            mCallback = callback;
+        }
+
+        @Override
+        public void run() {
+
+            if(mImage != null){
+                ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                FileOutputStream output = null;
+                try {
+                    File file = new File(mFile, "temp_image.jpg");
+                    output = new FileOutputStream(file);
+                    output.write(bytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    mCallback.done(e);
+                } finally {
+                    mImage.close();
+                    if (null != output) {
+                        try {
+                            output.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    mCallback.done(null);
+                }
+            }
+        }
+    }
 
     /**
      * Shows a {@link Toast} on the UI thread.
