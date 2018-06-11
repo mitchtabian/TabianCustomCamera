@@ -8,6 +8,6 @@
 
 <p>Here is an example issue I made so you can get a good idea of what it should look like: <a href='https://github.com/mitchtabian/TabianCustomCamera' target='_blank'>Example</a></p>
 
-<p>Link the Phone Test: <a href='https://github.com/mitchtabian/PhoneTest' target='_blank'>Phone Test</a></p>
+<p>Link to the Phone Test: <a href='https://github.com/mitchtabian/PhoneTest' target='_blank'>Phone Test</a></p>
 
 
