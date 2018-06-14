@@ -1,3 +1,5 @@
+<img class='header-img' src='https://s3.amazonaws.com/codingwithmitch-static-and-media/media/TabianCustomCamera/CustomCamera.png' />
+
 <h1>Building a Custom Camera for Android</h2>
 
 <p>Coming soon...</p>
