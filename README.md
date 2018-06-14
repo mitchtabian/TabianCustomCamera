@@ -4,7 +4,7 @@
 <p></p>
 
 <h2>Submitting an Issue</h2>
-<p>Watch <a href='#'>this</a> video to learn about how to properly submit an issue.</p>
+<p>Watch <a href='https://player.vimeo.com/video/274979439'>this</a> video to learn about how to properly submit an issue.</p>
 
 <p>Here is an example issue I made so you can get a good idea of what it should look like: <a href='https://github.com/mitchtabian/TabianCustomCamera' target='_blank'> Example</a></p>
 
