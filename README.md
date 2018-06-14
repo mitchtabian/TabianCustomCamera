@@ -1,6 +1,6 @@
-<img class='header-img' src='https://s3.amazonaws.com/codingwithmitch-static-and-media/media/TabianCustomCamera/CustomCamera.png' />
+<a href='https://codingwithmitch.com/courses/tabian-custom-camera-android/' target='_blank'><img class='header-img' src='https://s3.amazonaws.com/codingwithmitch-static-and-media/media/TabianCustomCamera/CustomCamera.png' /></a>
 
-<h1>Building a Custom Camera for Android</h2>
+<h1><a href='https://codingwithmitch.com/courses/tabian-custom-camera-android/' target='_blank'>Building a Custom Camera for Android</a></h2>
 
 <h3>What you'll learn:</h3>
 <ol>
@@ -14,7 +14,7 @@
 </ol>
 
 <h2>Submitting an Issue</h2>
-<p>Watch <a href='https://player.vimeo.com/video/274979439'>this</a> video to learn about how to properly submit an issue.</p>
+<p>Watch <a href='https://player.vimeo.com/video/274979439' target='_blank'>this</a> video to learn about how to properly submit an issue.</p>
 
 <p>Here is an example issue I made so you can get a good idea of what it should look like: <a href='https://github.com/mitchtabian/TabianCustomCamera' target='_blank'> Example</a></p>
 
