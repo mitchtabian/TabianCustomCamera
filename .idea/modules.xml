@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/TabianCustomCamera.iml" filepath="$PROJECT_DIR$/TabianCustomCamera.iml" />
-      <module fileurl="file://F:\AndroidStudio Projects\TabianCustomCamera\TabianCustomCamera.iml" filepath="F:\AndroidStudio Projects\TabianCustomCamera\TabianCustomCamera.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TabianCustomCamera.iml" filepath="$PROJECT_DIR$/TabianCustomCamera.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
