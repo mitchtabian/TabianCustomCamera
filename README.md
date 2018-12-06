@@ -22,4 +22,13 @@
 
 <p>Link to the Phone Test: <a href='https://github.com/mitchtabian/PhoneTest' target='_blank'> Phone Test</a></p>
 
+<h2>Phones with Known Issues</h2>
+<ol>
+  <li>
+    <p>Redmi 4X (santoni)</p>
+    <p>See <a href="https://xiaomifirmware.com/guides-and-tips/google-hdr-camera-slo-mo-redmi-4x/" target="_blank">here</a> for a workaround</p>
+  </li>
+</ol>
+
+
 
