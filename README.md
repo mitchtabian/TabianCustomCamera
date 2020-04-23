@@ -1,3 +1,5 @@
+# This code is deprecated. See [CameraX](https://developer.android.com/training/camerax)
+<br>
 <a href='https://codingwithmitch.com/courses/tabian-custom-camera-android/' target='_blank'><img class='header-img' src='https://s3.amazonaws.com/codingwithmitch-static-and-media/media/TabianCustomCamera/CustomCamera.png' /></a>
 
 <h1><a href='https://codingwithmitch.com/courses/tabian-custom-camera-android/' target='_blank'>Building a Custom Camera for Android</a></h1>
